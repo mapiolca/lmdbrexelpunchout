@@ -1,0 +1,6 @@
+Module maintained according to Dolibarr ModuleBuilder conventions.
+
+Module key: lmdbrexelpunchout
+Author: Pierre Ardoin <developpeur@lesmetiersdubatiment.fr>
+Minimum Dolibarr: 20.0
+Minimum PHP: 8.0

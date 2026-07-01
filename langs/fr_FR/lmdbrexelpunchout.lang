@@ -1,0 +1,113 @@
+LmdbRexelPunchout=Rexel Punchout
+LmdbRexelPunchoutModuleDescription=Punchout Rexel cXML
+LmdbRexelPunchoutModuleDescriptionLong=Ajoute un flux Punchout Rexel cXML sécurisé pour rapatrier un panier dans une commande fournisseur brouillon Dolibarr.
+LmdbRexelPunchoutSetup=Réglages Rexel Punchout
+LmdbRexelPunchoutSettingsPageHelp=Configurez le fournisseur Rexel, les identifiants cXML et les règles d’import génériques.
+LmdbRexelPunchoutCompatibilityPageHelp=Contrôle de compatibilité de l’environnement Dolibarr et PHP.
+LmdbRexelPunchoutSessionsPageHelp=Suivi des sessions Punchout Rexel et de leur état d’import.
+LmdbRexelPunchoutAboutPageHelp=Informations de version, compatibilité et maintenance du module.
+LmdbRexelPunchoutDependencies=Modules Fournisseurs et Produits/Services.
+LmdbRexelPunchoutMainFeatures=Bouton Punchout sur commande fournisseur Rexel brouillon, lancement PunchOutSetupRequest, retour PunchOutOrderMessage, création produit optionnelle, mise à jour des prix fournisseur, import sécurisé des lignes et frais de port cXML.
+LmdbRexelPunchoutLicenseInfo=Voir le fichier LICENSE du module.
+
+LmdbRexelPunchoutRightUse=Utiliser le Punchout Rexel
+LmdbRexelPunchoutRightReadSessions=Consulter les sessions Punchout Rexel
+LmdbRexelPunchoutRightConfigure=Configurer le module Rexel Punchout
+
+LmdbRexelPunchoutButton=Punchout Rexel
+LmdbRexelPunchoutIframeFallback=Si l’affichage intégré est bloqué, ouvrez le Punchout dans une nouvelle fenêtre.
+LmdbRexelPunchoutOpenExternal=Ouvrir dans une nouvelle fenêtre
+LmdbRexelPunchoutOpenPopup=Fenêtre popup
+LmdbRexelPunchoutOpenNewTab=Nouvel onglet
+LmdbRexelPunchoutOpenIframe=Fenêtre intégrée
+LmdbRexelPunchoutOpenMode=Mode d’ouverture
+
+LmdbRexelPunchoutGeneralSettings=Paramètres généraux
+LmdbRexelPunchoutProtocol=Protocole
+LmdbRexelPunchoutSupplier=Fournisseur Rexel
+LmdbRexelPunchoutCreateProducts=Créer les produits manquants
+LmdbRexelPunchoutAllowZeroPrice=Autoriser les prix à zéro
+LmdbRexelPunchoutProductRefPrefix=Préfixe des références produit
+LmdbRexelPunchoutTokenTtl=Durée de validité du jeton
+LmdbRexelPunchoutRetentionDays=Durée de conservation des payloads
+LmdbRexelPunchoutSecretAlreadySaved=Secret déjà enregistré
+
+LmdbRexelPunchoutCxmlSettings=Paramètres cXML
+LmdbRexelPunchoutCxmlUrl=URL PunchOutSetup Rexel
+LmdbRexelPunchoutCxmlSharedSecret=SharedSecret cXML
+LmdbRexelPunchoutCxmlCustomerDomain=Domain client
+LmdbRexelPunchoutCxmlCustomerIdentity=Identity client
+LmdbRexelPunchoutCxmlSenderDomain=Domain sender
+LmdbRexelPunchoutCxmlSenderIdentity=Identity sender
+LmdbRexelPunchoutCxmlSenderFallbackHelp=Laisser vide pour réutiliser les identifiants client.
+LmdbRexelPunchoutCxmlSupplierDomain=Domain fournisseur
+LmdbRexelPunchoutCxmlSupplierIdentity=Identity fournisseur
+LmdbRexelPunchoutCxmlImportShipping=Importer les frais de port cXML
+LmdbRexelPunchoutCxmlShippingProduct=Produit/service de frais de port
+LmdbRexelPunchoutCxmlShippingProductHelp=Optionnel. Si aucun produit/service n’est sélectionné, les frais de port positifs sont ajoutés en ligne libre.
+LmdbRexelPunchoutCxmlShippingVatRate=Taux de TVA des frais de port
+LmdbRexelPunchoutCxmlShippingVatRateHelp=Optionnel. Laisser vide pour utiliser le taux commun des lignes ou la TVA par défaut.
+
+LmdbRexelPunchoutUnitMapping=Correspondance des unités fournisseur
+LmdbRexelPunchoutUnitCode=Unité fournisseur
+LmdbRexelPunchoutUnitCodeRequired=Le code unité fournisseur est obligatoire.
+
+LmdbRexelPunchoutWrongEntity=La commande fournisseur appartient à un autre environnement.
+LmdbRexelPunchoutWrongSupplier=La commande fournisseur n’est pas liée au fournisseur Rexel configuré.
+LmdbRexelPunchoutOrderMustBeDraft=La commande fournisseur doit être au brouillon.
+LmdbRexelPunchoutIncompleteConfiguration=La configuration cXML Rexel est incomplète.
+LmdbRexelPunchoutLaunchFailed=Échec du lancement Punchout :
+LmdbRexelPunchoutInvalidToken=Jeton Punchout invalide.
+LmdbRexelPunchoutProtocolMismatch=Le protocole de retour ne correspond pas à la session.
+LmdbRexelPunchoutSessionExpired=La session Punchout a expiré.
+LmdbRexelPunchoutSessionAlreadyUsed=Cette session Punchout est déjà utilisée ou n’est plus importable.
+LmdbRexelPunchoutNoLineReturned=Aucune ligne n’a été retournée par le panier Punchout.
+LmdbRexelPunchoutImportUserNotFound=Utilisateur d’import introuvable.
+LmdbRexelPunchoutImportUserNoRight=L’utilisateur d’import n’a plus les droits nécessaires.
+LmdbRexelPunchoutSessionNotFound=Session Punchout introuvable.
+LmdbRexelPunchoutSessionUserMismatch=Cette session Punchout appartient à un autre utilisateur.
+
+LmdbRexelPunchoutReturnTitle=Retour Punchout Rexel
+LmdbRexelPunchoutReturnFailed=Échec du retour Punchout :
+LmdbRexelPunchoutBasketStored=Panier Punchout reçu. L’import doit être confirmé depuis une session Dolibarr authentifiée.
+LmdbRexelPunchoutOpenImportPage=Ouvrir l’import du panier
+LmdbRexelPunchoutImportBasket=Importer le panier Punchout
+LmdbRexelPunchoutImportSuccess=%s ligne(s) importée(s), %s produit(s) créé(s), %s prix fournisseur mis à jour.
+LmdbRexelPunchoutImportFailed=Échec de l’import Punchout :
+LmdbRexelPunchoutShippingLineLabel=Frais de port Rexel
+LmdbRexelPunchoutShippingImportDisabled=Les frais de port cXML n’ont pas été importés car l’option est désactivée.
+
+LmdbRexelPunchoutSessions=Sessions Punchout
+LmdbRexelPunchoutStatusCreated=Créée
+LmdbRexelPunchoutStatusSent=Envoyée
+LmdbRexelPunchoutStatusReturned=Retournée
+LmdbRexelPunchoutStatusImported=Importée
+LmdbRexelPunchoutStatusExpired=Expirée
+LmdbRexelPunchoutStatusError=Erreur
+LmdbRexelPunchoutReturnedAt=Retour
+LmdbRexelPunchoutImportedAt=Import
+
+LmdbRexelPunchoutCronCleanupLabel=Nettoyage des sessions Punchout Rexel
+LmdbRexelPunchoutCronCleanupComment=Expire les sessions Punchout Rexel et purge les anciens payloads.
+
+LmdbRexelPunchoutFeatureBase=Base du module
+LmdbRexelPunchoutFeatureBaseDescription=Activation, droits, pages d’administration et jetons Dolibarr.
+LmdbRexelPunchoutFeatureCxml=Flux cXML
+LmdbRexelPunchoutFeatureCxmlDescription=Création PunchOutSetupRequest et parsing PunchOutOrderMessage.
+LmdbRexelPunchoutFeatureCxmlCurl=Lancement cXML par cURL
+LmdbRexelPunchoutFeatureCxmlCurlDescription=Envoi HTTP du PunchOutSetupRequest vers Rexel.
+LmdbRexelPunchoutFeatureSecretEncryption=Chiffrement natif des secrets
+LmdbRexelPunchoutFeatureSecretEncryptionDescription=Chiffrement et déchiffrement des secrets via les fonctions natives Dolibarr lorsque disponibles.
+
+DetectedPHPVersion=Version PHP détectée
+DetectedDolibarrVersion=Version Dolibarr détectée
+MinimumPHPVersion=Version PHP minimale
+MinimumDolibarrVersion=Version Dolibarr minimale
+Available=Disponible
+Unavailable=Indisponible
+RequiresDolibarrVersion=Version Dolibarr insuffisante
+RequiresPhpVersion=Version PHP insuffisante
+RequiresPhpFunction=Fonction PHP requise absente
+RequiresDolibarrFunction=Fonction Dolibarr requise absente
+RequiresPhpClass=Classe PHP requise absente
+BackToSupplierOrder=Retour vers la commande fournisseur

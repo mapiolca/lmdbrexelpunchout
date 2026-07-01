@@ -1,0 +1,22 @@
+CREATE TABLE llx_lmdbrexelpunchout_session (
+	rowid integer AUTO_INCREMENT PRIMARY KEY,
+	entity integer DEFAULT 1 NOT NULL,
+	token_hash varchar(64) NOT NULL,
+	fk_commandefourn integer NOT NULL,
+	fk_soc integer NOT NULL,
+	fk_user integer NOT NULL,
+	protocol varchar(10) DEFAULT 'CXML' NOT NULL,
+	status varchar(20) DEFAULT 'created' NOT NULL,
+	datec datetime NOT NULL,
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	date_validity datetime NOT NULL,
+	date_return datetime NULL,
+	date_import datetime NULL,
+	raw_payload mediumtext NULL,
+	normalized_payload mediumtext NULL,
+	basket_payload mediumtext NULL,
+	import_log mediumtext NULL,
+	error_message text NULL,
+	import_count integer DEFAULT 0 NOT NULL,
+	ip_address varchar(64) NULL
+) ENGINE=innodb;

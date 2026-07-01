@@ -1,0 +1,113 @@
+LmdbRexelPunchout=Rexel Punchout
+LmdbRexelPunchoutModuleDescription=Rexel cXML Punchout
+LmdbRexelPunchoutModuleDescriptionLong=Adds a secure Rexel cXML Punchout flow to import a basket into a draft Dolibarr supplier order.
+LmdbRexelPunchoutSetup=Rexel Punchout setup
+LmdbRexelPunchoutSettingsPageHelp=Configure the Rexel supplier, cXML credentials, and generic import rules.
+LmdbRexelPunchoutCompatibilityPageHelp=Dolibarr and PHP environment compatibility check.
+LmdbRexelPunchoutSessionsPageHelp=Rexel Punchout session tracking and import status.
+LmdbRexelPunchoutAboutPageHelp=Version, compatibility, and maintenance information for the module.
+LmdbRexelPunchoutDependencies=Supplier and Products/Services modules.
+LmdbRexelPunchoutMainFeatures=Punchout button on draft Rexel supplier orders, PunchOutSetupRequest launch, PunchOutOrderMessage return, optional product creation, supplier price update, secure line import, and cXML shipping fees.
+LmdbRexelPunchoutLicenseInfo=See the module LICENSE file.
+
+LmdbRexelPunchoutRightUse=Use Rexel Punchout
+LmdbRexelPunchoutRightReadSessions=Read Rexel Punchout sessions
+LmdbRexelPunchoutRightConfigure=Configure Rexel Punchout
+
+LmdbRexelPunchoutButton=Rexel Punchout
+LmdbRexelPunchoutIframeFallback=If embedded display is blocked, open Punchout in a new window.
+LmdbRexelPunchoutOpenExternal=Open in a new window
+LmdbRexelPunchoutOpenPopup=Popup window
+LmdbRexelPunchoutOpenNewTab=New tab
+LmdbRexelPunchoutOpenIframe=Embedded window
+LmdbRexelPunchoutOpenMode=Opening mode
+
+LmdbRexelPunchoutGeneralSettings=General settings
+LmdbRexelPunchoutProtocol=Protocol
+LmdbRexelPunchoutSupplier=Rexel supplier
+LmdbRexelPunchoutCreateProducts=Create missing products
+LmdbRexelPunchoutAllowZeroPrice=Allow zero prices
+LmdbRexelPunchoutProductRefPrefix=Product reference prefix
+LmdbRexelPunchoutTokenTtl=Token lifetime
+LmdbRexelPunchoutRetentionDays=Payload retention duration
+LmdbRexelPunchoutSecretAlreadySaved=Secret already saved
+
+LmdbRexelPunchoutCxmlSettings=cXML settings
+LmdbRexelPunchoutCxmlUrl=Rexel PunchOutSetup URL
+LmdbRexelPunchoutCxmlSharedSecret=cXML SharedSecret
+LmdbRexelPunchoutCxmlCustomerDomain=Customer domain
+LmdbRexelPunchoutCxmlCustomerIdentity=Customer identity
+LmdbRexelPunchoutCxmlSenderDomain=Sender domain
+LmdbRexelPunchoutCxmlSenderIdentity=Sender identity
+LmdbRexelPunchoutCxmlSenderFallbackHelp=Leave empty to reuse customer credentials.
+LmdbRexelPunchoutCxmlSupplierDomain=Supplier domain
+LmdbRexelPunchoutCxmlSupplierIdentity=Supplier identity
+LmdbRexelPunchoutCxmlImportShipping=Import cXML shipping fees
+LmdbRexelPunchoutCxmlShippingProduct=Shipping fee product/service
+LmdbRexelPunchoutCxmlShippingProductHelp=Optional. If no product/service is selected, positive shipping fees are added as a free line.
+LmdbRexelPunchoutCxmlShippingVatRate=Shipping fee VAT rate
+LmdbRexelPunchoutCxmlShippingVatRateHelp=Optional. Leave empty to use the common line VAT rate or the default VAT rate.
+
+LmdbRexelPunchoutUnitMapping=Supplier unit mapping
+LmdbRexelPunchoutUnitCode=Supplier unit
+LmdbRexelPunchoutUnitCodeRequired=Supplier unit code is required.
+
+LmdbRexelPunchoutWrongEntity=The supplier order belongs to another environment.
+LmdbRexelPunchoutWrongSupplier=The supplier order is not linked to the configured Rexel supplier.
+LmdbRexelPunchoutOrderMustBeDraft=The supplier order must be draft.
+LmdbRexelPunchoutIncompleteConfiguration=The Rexel cXML configuration is incomplete.
+LmdbRexelPunchoutLaunchFailed=Unable to launch Punchout:
+LmdbRexelPunchoutInvalidToken=Invalid Punchout token.
+LmdbRexelPunchoutProtocolMismatch=The return protocol does not match the session.
+LmdbRexelPunchoutSessionExpired=The Punchout session has expired.
+LmdbRexelPunchoutSessionAlreadyUsed=This Punchout session has already been used or cannot be imported anymore.
+LmdbRexelPunchoutNoLineReturned=No line was returned by the Punchout basket.
+LmdbRexelPunchoutImportUserNotFound=Import user not found.
+LmdbRexelPunchoutImportUserNoRight=The import user no longer has the required rights.
+LmdbRexelPunchoutSessionNotFound=Punchout session not found.
+LmdbRexelPunchoutSessionUserMismatch=This Punchout session belongs to another user.
+
+LmdbRexelPunchoutReturnTitle=Rexel Punchout return
+LmdbRexelPunchoutReturnFailed=Punchout return failed:
+LmdbRexelPunchoutBasketStored=Punchout basket received. Import must be confirmed from an authenticated Dolibarr session.
+LmdbRexelPunchoutOpenImportPage=Open basket import
+LmdbRexelPunchoutImportBasket=Import Punchout basket
+LmdbRexelPunchoutImportSuccess=%s line(s) imported, %s product(s) created, %s supplier price(s) updated.
+LmdbRexelPunchoutImportFailed=Punchout import failed:
+LmdbRexelPunchoutShippingLineLabel=Rexel shipping fees
+LmdbRexelPunchoutShippingImportDisabled=cXML shipping fees were not imported because the option is disabled.
+
+LmdbRexelPunchoutSessions=Punchout sessions
+LmdbRexelPunchoutStatusCreated=Created
+LmdbRexelPunchoutStatusSent=Sent
+LmdbRexelPunchoutStatusReturned=Returned
+LmdbRexelPunchoutStatusImported=Imported
+LmdbRexelPunchoutStatusExpired=Expired
+LmdbRexelPunchoutStatusError=Error
+LmdbRexelPunchoutReturnedAt=Returned at
+LmdbRexelPunchoutImportedAt=Imported at
+
+LmdbRexelPunchoutCronCleanupLabel=Rexel Punchout session cleanup
+LmdbRexelPunchoutCronCleanupComment=Expires Rexel Punchout sessions and purges old payloads.
+
+LmdbRexelPunchoutFeatureBase=Module base
+LmdbRexelPunchoutFeatureBaseDescription=Activation, rights, administration pages, and Dolibarr tokens.
+LmdbRexelPunchoutFeatureCxml=cXML flow
+LmdbRexelPunchoutFeatureCxmlDescription=PunchOutSetupRequest creation and PunchOutOrderMessage parsing.
+LmdbRexelPunchoutFeatureCxmlCurl=cXML launch with cURL
+LmdbRexelPunchoutFeatureCxmlCurlDescription=HTTP submission of PunchOutSetupRequest to Rexel.
+LmdbRexelPunchoutFeatureSecretEncryption=Native secret encryption
+LmdbRexelPunchoutFeatureSecretEncryptionDescription=Secret encryption and decryption through native Dolibarr functions when available.
+
+DetectedPHPVersion=Detected PHP version
+DetectedDolibarrVersion=Detected Dolibarr version
+MinimumPHPVersion=Minimum PHP version
+MinimumDolibarrVersion=Minimum Dolibarr version
+Available=Available
+Unavailable=Unavailable
+RequiresDolibarrVersion=Insufficient Dolibarr version
+RequiresPhpVersion=Insufficient PHP version
+RequiresPhpFunction=Required PHP function is missing
+RequiresDolibarrFunction=Required Dolibarr function is missing
+RequiresPhpClass=Required PHP class is missing
+BackToSupplierOrder=Back to supplier order
