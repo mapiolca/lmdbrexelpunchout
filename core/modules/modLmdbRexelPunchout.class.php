@@ -28,7 +28,7 @@ class modLmdbRexelPunchout extends DolibarrModules
 	public function __construct($db)
 	{
 		$this->db = $db;
-		$this->numero = 450024;
+		$this->numero = 450017;
 		$this->rights_class = 'lmdbrexelpunchout';
 		$this->family = 'Les Métiers du Bâtiment';
 		$this->module_position = '90';
