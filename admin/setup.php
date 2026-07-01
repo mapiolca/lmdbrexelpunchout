@@ -20,6 +20,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 require_once __DIR__.'/../lib/lmdbrexelpunchout.lib.php';
 require_once __DIR__.'/../class/lmdbrexelpunchoutconfig.class.php';
+require_once __DIR__.'/../class/lmdbrexelpunchoutrexelsupplier.class.php';
 require_once __DIR__.'/../class/lmdbrexelpunchoutsecurity.class.php';
 
 $langs->loadLangs(array('admin', 'companies', 'products', 'lmdbrexelpunchout@lmdbrexelpunchout'));
@@ -32,6 +33,32 @@ $form = new Form($db);
 $action = GETPOST('action', 'aZ09');
 $rowid = GETPOSTINT('rowid');
 $setupUrl = dol_buildpath('/lmdbrexelpunchout/admin/setup.php', 1);
+
+if ($action === 'create_rexel_supplier') {
+	if (!LmdbRexelPunchoutSecurity::checkToken()) {
+		accessforbidden('Bad token');
+	}
+
+	$rexelSupplier = new LmdbRexelPunchoutRexelSupplier($db);
+	$result = $rexelSupplier->createOrAssociate($user);
+	if ($result['status'] === 'ambiguous') {
+		$ids = !empty($result['ambiguous_ids']) && is_array($result['ambiguous_ids']) ? implode(', ', array_map('intval', $result['ambiguous_ids'])) : '';
+		setEventMessages($langs->trans('LmdbRexelPunchoutRexelSupplierAmbiguous', $ids), null, 'errors');
+	} elseif ($result['status'] === 'permission') {
+		setEventMessages($langs->trans($rexelSupplier->error), null, 'errors');
+	} elseif ($result['fk_soc'] <= 0) {
+		setEventMessages($rexelSupplier->error ?: $langs->trans('Error'), $rexelSupplier->errors, 'errors');
+	} elseif ($result['created']) {
+		setEventMessages($langs->trans('LmdbRexelPunchoutRexelSupplierCreated', (int) $result['fk_soc']), null, 'mesgs');
+	} elseif ($result['updated']) {
+		setEventMessages($langs->trans('LmdbRexelPunchoutRexelSupplierAssociatedUpdated', (int) $result['fk_soc']), null, 'mesgs');
+	} else {
+		setEventMessages($langs->trans('LmdbRexelPunchoutRexelSupplierAssociated', (int) $result['fk_soc']), null, 'mesgs');
+	}
+
+	header('Location: '.$setupUrl);
+	exit;
+}
 
 if ($action === 'save_settings') {
 	if (!LmdbRexelPunchoutSecurity::checkToken()) {
@@ -55,6 +82,7 @@ if ($action === 'save_settings') {
 		'CURRENCY' => strtoupper(GETPOST('LMDBREXELPUNCHOUT_CURRENCY', 'alpha')),
 		'DEFAULT_VAT' => GETPOST('LMDBREXELPUNCHOUT_DEFAULT_VAT', 'alphanohtml'),
 		'PRODUCT_REF_PREFIX' => GETPOST('LMDBREXELPUNCHOUT_PRODUCT_REF_PREFIX', 'alphanohtml'),
+		'PRODUCT_REF_MODE' => GETPOST('LMDBREXELPUNCHOUT_PRODUCT_REF_MODE', 'alpha'),
 		'TOKEN_TTL' => (string) max(1, GETPOSTINT('LMDBREXELPUNCHOUT_TOKEN_TTL')),
 		'RETENTION_DAYS' => (string) max(1, GETPOSTINT('LMDBREXELPUNCHOUT_RETENTION_DAYS')),
 	);
@@ -76,6 +104,9 @@ if ($action === 'save_settings') {
 	}
 	if ($settings['PRODUCT_REF_PREFIX'] === '') {
 		$settings['PRODUCT_REF_PREFIX'] = 'REXEL-';
+	}
+	if (!in_array($settings['PRODUCT_REF_MODE'], LmdbRexelPunchoutConfig::getProductRefModes(), true)) {
+		$settings['PRODUCT_REF_MODE'] = LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_PREFIX;
 	}
 	if ($settings['CXML_SHIPPING_VAT_RATE'] !== '' && !is_numeric(str_replace(',', '.', $settings['CXML_SHIPPING_VAT_RATE']))) {
 		$settings['CXML_SHIPPING_VAT_RATE'] = '';
@@ -160,7 +191,21 @@ $cxmlModeOptions = array(
 	'production' => $langs->trans('Production'),
 	'test' => $langs->trans('Test'),
 );
+$productRefModeOptions = array(
+	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_PREFIX => $langs->trans('LmdbRexelPunchoutProductRefModePrefix'),
+	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_DOLIBARR => $langs->trans('LmdbRexelPunchoutProductRefModeDolibarr'),
+	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_SUPPLIER_REF => $langs->trans('LmdbRexelPunchoutProductRefModeSupplierRef'),
+	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL => $langs->trans('LmdbRexelPunchoutProductRefModeManual'),
+);
 $shippingProductOptions = getProductServiceOptions($db);
+
+print '<form method="POST" action="'.$setupUrl.'">';
+print '<input type="hidden" name="token" value="'.newToken().'">';
+print '<input type="hidden" name="action" value="create_rexel_supplier">';
+print '<div class="tabsAction">';
+print '<input type="submit" class="button" value="'.$langs->trans('LmdbRexelPunchoutCreateOrAssociateRexelSupplier').'">';
+print '</div>';
+print '</form>';
 
 print '<form method="POST" action="'.$setupUrl.'">';
 print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -181,6 +226,7 @@ print '<tr class="oddeven"><td>'.$langs->trans('Currency').'</td><td><input clas
 print '<tr class="oddeven"><td>'.$langs->trans('DefaultVATRate').'</td><td><input class="flat width50" name="LMDBREXELPUNCHOUT_DEFAULT_VAT" value="'.dol_escape_htmltag(LmdbRexelPunchoutConfig::getString('DEFAULT_VAT', '20')).'"> %</td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCreateProducts').'</td><td>'.(function_exists('ajax_constantonoff') ? ajax_constantonoff('LMDBREXELPUNCHOUT_CREATE_PRODUCTS', array(), null, 0, 0, 0, 2, 0, 1) : $langs->trans(LmdbRexelPunchoutConfig::getInt('CREATE_PRODUCTS', 1) ? 'Yes' : 'No')).'</td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutAllowZeroPrice').'</td><td>'.(function_exists('ajax_constantonoff') ? ajax_constantonoff('LMDBREXELPUNCHOUT_ALLOW_ZERO_PRICE') : $langs->trans(LmdbRexelPunchoutConfig::getInt('ALLOW_ZERO_PRICE', 0) ? 'Yes' : 'No')).'</td></tr>';
+print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutProductRefMode').'</td><td>'.$form->selectarray('LMDBREXELPUNCHOUT_PRODUCT_REF_MODE', $productRefModeOptions, LmdbRexelPunchoutConfig::getProductRefMode(), 0, 0, 0, '', 0, 0, 0, '', 'minwidth300').'</td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutProductRefPrefix').'</td><td><input class="flat minwidth100" name="LMDBREXELPUNCHOUT_PRODUCT_REF_PREFIX" value="'.dol_escape_htmltag(LmdbRexelPunchoutConfig::getString('PRODUCT_REF_PREFIX', 'REXEL-')).'"></td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutTokenTtl').'</td><td><input class="flat width50" name="LMDBREXELPUNCHOUT_TOKEN_TTL" value="'.LmdbRexelPunchoutConfig::getInt('TOKEN_TTL', 30).'"> '.$langs->trans('Minutes').'</td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutRetentionDays').'</td><td><input class="flat width50" name="LMDBREXELPUNCHOUT_RETENTION_DAYS" value="'.LmdbRexelPunchoutConfig::getInt('RETENTION_DAYS', 30).'"> '.$langs->trans('days').'</td></tr>';
@@ -205,7 +251,7 @@ print '<div class="center"><input type="submit" class="button button-save" value
 print '</form>';
 
 if (function_exists('ajax_combobox')) {
-	foreach (array('LMDBREXELPUNCHOUT_FK_SOC', 'LMDBREXELPUNCHOUT_OPEN_MODE', 'LMDBREXELPUNCHOUT_CXML_MODE', 'LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT') as $htmlname) {
+	foreach (array('LMDBREXELPUNCHOUT_FK_SOC', 'LMDBREXELPUNCHOUT_OPEN_MODE', 'LMDBREXELPUNCHOUT_PRODUCT_REF_MODE', 'LMDBREXELPUNCHOUT_CXML_MODE', 'LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT') as $htmlname) {
 		ajax_combobox($htmlname);
 	}
 }

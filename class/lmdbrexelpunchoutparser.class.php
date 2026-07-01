@@ -41,11 +41,11 @@ class LmdbRexelPunchoutParser
 		$xpath = new DOMXPath($doc);
 		$headerNode = $xpath->query('//*[local-name()="PunchOutOrderMessageHeader"]')->item(0);
 		$header = $this->parseCxmlHeader($xpath, $headerNode);
-		$items = $xpath->query('//*[local-name()="ItemIn"]');
+		$items = $xpath->query('//*[local-name()="ItemIn" or local-name()="ItemOut"]');
 		$lines = array();
 
 		foreach ($items as $item) {
-			$vendorRef = $this->xpathText($xpath, './/*[local-name()="SupplierPartID"]', $item);
+			$vendorRef = $this->resolveVendorReference($xpath, $item);
 			if ($vendorRef === '') {
 				continue;
 			}
@@ -156,6 +156,35 @@ class LmdbRexelPunchoutParser
 	{
 		$node = $xpath->query($query, $ctx)->item(0);
 		return $node ? trim($node->textContent) : '';
+	}
+
+	/**
+	 * Resolve the supplier reference from cXML item nodes.
+	 *
+	 * SupplierPartID is the canonical cXML field. Some supplier gateways return
+	 * ItemOut nodes or leave SupplierPartID empty while filling another item
+	 * identifier, so use controlled fallbacks instead of dropping the line.
+	 *
+	 * @param DOMXPath $xpath XPath object
+	 * @param DOMNode  $item  Item node
+	 * @return string
+	 */
+	private function resolveVendorReference($xpath, $item)
+	{
+		foreach (array(
+			'.//*[local-name()="ItemID"]/*[local-name()="SupplierPartID"]',
+			'.//*[local-name()="ItemID"]/*[local-name()="BuyerPartID"]',
+			'.//*[local-name()="ItemID"]/*[local-name()="SupplierPartAuxiliaryID"]',
+			'.//*[local-name()="ItemDetail"]/*[local-name()="ManufacturerPartID"]',
+			'.//*[local-name()="ManufacturerPartID"]',
+		) as $query) {
+			$value = $this->xpathText($xpath, $query, $item);
+			if ($value !== '') {
+				return $value;
+			}
+		}
+
+		return '';
 	}
 
 	/**

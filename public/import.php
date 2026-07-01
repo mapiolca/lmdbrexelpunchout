@@ -37,6 +37,7 @@ $session = new LmdbRexelPunchoutSession($db);
 if ($id <= 0 || $session->fetch($id) <= 0) {
 	accessforbidden($langs->trans('LmdbRexelPunchoutSessionNotFound'));
 }
+$importer = new LmdbRexelPunchoutImporter($db);
 
 if ((int) $session->entity !== (int) $conf->entity) {
 	accessforbidden($langs->trans('LmdbRexelPunchoutWrongEntity'));
@@ -53,9 +54,36 @@ if ($action === 'import') {
 		accessforbidden($langs->trans('LmdbRexelPunchoutSessionAlreadyUsed'));
 	}
 
+	$manualProductRefs = array();
+	if (LmdbRexelPunchoutConfig::getProductRefMode() === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL) {
+		$manualInputErrors = array();
+		$linesForManualRefs = $session->fetchLines();
+		foreach ($linesForManualRefs as $lineForManualRef) {
+			if (!$importer->lineNeedsManualProductRef((int) $session->fk_soc, $lineForManualRef)) {
+				continue;
+			}
+
+			$lineId = (int) $lineForManualRef['rowid'];
+			$manualRef = trim(GETPOST('manual_product_ref_'.$lineId, 'alphanohtml'));
+			if ($manualRef === '') {
+				$manualInputErrors[] = $langs->trans('LmdbRexelPunchoutManualProductRefRequired', $lineForManualRef['vendor_ref']);
+			} elseif (preg_match('/[<>]/', $manualRef)) {
+				$manualInputErrors[] = $langs->trans('LmdbRexelPunchoutManualProductRefInvalid', $lineForManualRef['vendor_ref']);
+			} else {
+				$manualProductRefs[$lineId] = $manualRef;
+			}
+		}
+
+		if (!empty($manualInputErrors)) {
+			setEventMessages('', $manualInputErrors, 'errors');
+			$action = '';
+		}
+	}
+}
+
+if ($action === 'import') {
 	try {
-		$importer = new LmdbRexelPunchoutImporter($db);
-		$summary = $importer->importStoredSession($session, $user);
+		$summary = $importer->importStoredSession($session, $user, $manualProductRefs);
 
 		$message = $langs->trans('LmdbRexelPunchoutImportSuccess', (int) $summary['lines_added'], (int) $summary['products_created'], (int) $summary['supplier_prices_updated']);
 		if (!empty($summary['warnings']) && is_array($summary['warnings'])) {
@@ -85,6 +113,8 @@ if ($session->status !== LmdbRexelPunchoutSession::STATUS_RETURNED) {
 	print '<div class="warning">'.$langs->trans('LmdbRexelPunchoutSessionAlreadyUsed').'</div>';
 } else {
 	$lines = $session->fetchLines();
+	$showManualProductRef = LmdbRexelPunchoutConfig::getProductRefMode() === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL;
+	$colspan = $showManualProductRef ? 7 : 6;
 	print '<form method="POST" action="'.dol_buildpath('/lmdbrexelpunchout/public/import.php', 1).'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="action" value="import">';
@@ -92,6 +122,9 @@ if ($session->status !== LmdbRexelPunchoutSession::STATUS_RETURNED) {
 	print '<table class="noborder centpercent">';
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans('SupplierRef').'</th>';
+	if ($showManualProductRef) {
+		print '<th>'.$langs->trans('LmdbRexelPunchoutManualProductRef').'</th>';
+	}
 	print '<th>'.$langs->trans('Label').'</th>';
 	print '<th class="right">'.$langs->trans('Qty').'</th>';
 	print '<th>'.$langs->trans('Unit').'</th>';
@@ -101,6 +134,16 @@ if ($session->status !== LmdbRexelPunchoutSession::STATUS_RETURNED) {
 	foreach ($lines as $line) {
 		print '<tr class="oddeven">';
 		print '<td>'.dol_escape_htmltag($line['vendor_ref']).'</td>';
+		if ($showManualProductRef) {
+			print '<td>';
+			if ($importer->lineNeedsManualProductRef((int) $session->fk_soc, $line)) {
+				$fieldName = 'manual_product_ref_'.((int) $line['rowid']);
+				print '<input class="flat minwidth150" name="'.$fieldName.'" value="'.dol_escape_htmltag(GETPOST($fieldName, 'alphanohtml')).'" placeholder="'.dol_escape_htmltag($line['vendor_ref']).'">';
+			} else {
+				print '<span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutProductAlreadyLinked').'</span>';
+			}
+			print '</td>';
+		}
 		print '<td>'.dol_escape_htmltag($line['label']).'</td>';
 		print '<td class="right">'.price($line['qty']).'</td>';
 		print '<td>'.dol_escape_htmltag($line['unit_code']).'</td>';
@@ -109,7 +152,7 @@ if ($session->status !== LmdbRexelPunchoutSession::STATUS_RETURNED) {
 		print '</tr>';
 	}
 	if (empty($lines)) {
-		print '<tr class="oddeven"><td colspan="6"><span class="opacitymedium">'.$langs->trans('NoRecordFound').'</span></td></tr>';
+		print '<tr class="oddeven"><td colspan="'.((int) $colspan).'"><span class="opacitymedium">'.$langs->trans('NoRecordFound').'</span></td></tr>';
 	}
 	print '</table>';
 	print '<div class="center"><input class="button button-save" type="submit" value="'.$langs->trans('LmdbRexelPunchoutImportBasket').'"></div>';

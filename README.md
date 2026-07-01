@@ -24,7 +24,7 @@ Le module ne dépend pas de `rexelsync`. Le tiers Rexel et les identifiants cXML
 - Affichage du bouton uniquement si la commande est brouillon, liée au tiers Rexel configuré, dans l'entité active propriétaire et si l'utilisateur dispose du droit `punchout/use`.
 - Flux cXML standard avec `PunchOutSetupRequest`, `PunchOutSetupResponse` et retour `PunchOutOrderMessage`.
 - Retour panier public en `cXML-urlencoded` ou `cXML-base64`.
-- Conservation des métadonnées cXML : `BuyerCookie`, `BrowserFormPost`, `StartPage`, frais de port, total, taxes, adresse `ShipTo`, `SupplierPartID`, `SupplierPartAuxiliaryID`, `UnitOfMeasure` et `Classification`.
+- Conservation des métadonnées cXML : `BuyerCookie`, `BrowserFormPost`, `StartPage`, frais de port, total, taxes, adresse `ShipTo`, références produit (`SupplierPartID` ou référence alternative cXML), `SupplierPartAuxiliaryID`, `UnitOfMeasure` et `Classification`.
 - Stockage du panier au retour cXML, puis import authentifié avec token CSRF Dolibarr.
 - Recherche produit par prix fournisseur Rexel, puis par référence générée, puis création optionnelle.
 - Mise à jour du prix fournisseur via `ProductFournisseur`.
@@ -33,6 +33,8 @@ Le module ne dépend pas de `rexelsync`. Le tiers Rexel et les identifiants cXML
 - Mapping générique des unités fournisseur vers les unités Dolibarr.
 - Sessions Punchout temporaires avec jeton aléatoire à usage unique.
 - Cron natif, désactivé par défaut, pour expirer les sessions et purger les anciens payloads.
+- Bouton de réglage pour créer ou associer automatiquement le tiers fournisseur REXEL France.
+- Stratégie configurable pour les références produit créées lors de l'import : préfixe actuel, numérotation native Produits/Services, référence REXEL ou choix manuel par ligne.
 
 ## Configuration
 
@@ -60,6 +62,7 @@ Paramètres principaux :
 - Devise attendue
 - TVA par défaut
 - Création des produits absents
+- Stratégie de référence pour les produits absents
 - Autorisation des prix à zéro
 - Préfixe de référence produit, par défaut `REXEL-`
 - Durée de validité du jeton
@@ -97,7 +100,6 @@ Les pages publiques vérifient le jeton Punchout et l'entité. L'import reste pr
 
 - Autres protocoles Punchout que cXML.
 - Barèmes fiscaux spécifiques fournisseur.
-- Création automatique du tiers Rexel.
 - Couplage obligatoire avec un module de synchronisation Rexel.
 - Envoi final de la commande à Rexel par EDI ORDER.
 - Support complet d'import depuis une entité différente de l'entité propriétaire.
@@ -110,6 +112,7 @@ Les pages publiques vérifient le jeton Punchout et l'entité. L'import reste pr
 - Bouton visible/invisible selon tiers, statut, droits et entité.
 - Retour cXML avec `PunchOutOrderMessage` en `cXML-urlencoded`.
 - Retour cXML avec `PunchOutOrderMessage` en `cXML-base64`.
+- Retour cXML avec lignes `ItemIn` ou `ItemOut` et référence produit alternative lorsque `SupplierPartID` est vide.
 - Parsing `StartPage` depuis `PunchOutSetupResponse`.
 - Retour cXML avec frais de port absent, nul et positif.
 - Parsing des taxes, de `ShipTo` et des métadonnées de lignes.
@@ -120,6 +123,10 @@ Les pages publiques vérifient le jeton Punchout et l'entité. L'import reste pr
 - Devise différente de la devise attendue refusée.
 - Produit existant par référence fournisseur.
 - Produit créé avec préfixe configuré.
+- Produit créé avec la numérotation native Produits/Services lorsque le modèle produit fournit une référence.
+- Produit créé ou réutilisé avec la référence REXEL.
+- Produit créé ou réutilisé avec une référence saisie par l'utilisateur lors de l'import.
+- Création ou association automatique du tiers REXEL depuis les réglages.
 - Unité fournisseur non mappée importée avec avertissement.
 - Deux entités Multicompany avec configurations distinctes.
 - Cron natif visible dans les travaux planifiés et exécutable manuellement.

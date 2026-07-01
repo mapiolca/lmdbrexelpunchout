@@ -56,9 +56,10 @@ class LmdbRexelPunchoutImporter
 	 *
 	 * @param LmdbRexelPunchoutSession $session Session
 	 * @param User                     $user    User
+	 * @param array<int,string>        $manualProductRefs Manual product refs indexed by session line id
 	 * @return array<string,mixed>
 	 */
-	public function importStoredSession($session, $user)
+	public function importStoredSession($session, $user, $manualProductRefs = array())
 	{
 		if ($session->status !== LmdbRexelPunchoutSession::STATUS_RETURNED) {
 			throw new RuntimeException('Punchout session is not importable');
@@ -66,7 +67,7 @@ class LmdbRexelPunchoutImporter
 
 		$this->db->begin();
 		try {
-			$summary = $this->importSession($session, $user);
+			$summary = $this->importSession($session, $user, $manualProductRefs);
 			if ($session->markImported($summary) < 0) {
 				throw new RuntimeException($session->error);
 			}
@@ -84,9 +85,10 @@ class LmdbRexelPunchoutImporter
 	 *
 	 * @param LmdbRexelPunchoutSession $session Session
 	 * @param User                     $user    User
+	 * @param array<int,string>        $manualProductRefs Manual product refs indexed by session line id
 	 * @return array<string,mixed>
 	 */
-	public function importSession($session, $user)
+	public function importSession($session, $user, $manualProductRefs = array())
 	{
 		global $conf;
 
@@ -127,15 +129,17 @@ class LmdbRexelPunchoutImporter
 				$summary['warnings'][] = $line['vendor_ref'].': UnitNotMapped';
 			}
 
+			$productRef = '';
 			$productId = $this->findProductBySupplierRef((int) $session->fk_soc, (string) $line['vendor_ref']);
 			if ($productId <= 0) {
-				$productId = $this->findProductByGeneratedRef((string) $line['vendor_ref']);
+				$productRef = $this->resolveProductRef($line, $manualProductRefs);
+				$productId = $this->findProductByRef($productRef);
 			}
 			if ($productId <= 0) {
 				if (!LmdbRexelPunchoutConfig::getInt('CREATE_PRODUCTS', 1)) {
 					throw new RuntimeException('Product not found and product creation is disabled: '.$line['vendor_ref']);
 				}
-				$productId = $this->createProduct($line, $user);
+				$productId = $this->createProduct($line, $user, $productRef);
 				$summary['products_created']++;
 			}
 
@@ -181,6 +185,25 @@ class LmdbRexelPunchoutImporter
 		$order->update_price(1, 'auto', 0, $order->thirdparty);
 
 		return $summary;
+	}
+
+	/**
+	 * Check if an import line needs a manual product reference.
+	 *
+	 * @param int                 $supplierId Supplier id
+	 * @param array<string,mixed> $line       Line
+	 * @return bool
+	 */
+	public function lineNeedsManualProductRef($supplierId, $line)
+	{
+		if (LmdbRexelPunchoutConfig::getProductRefMode() !== LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL) {
+			return false;
+		}
+		if (!empty($line['fk_product']) && (int) $line['fk_product'] > 0) {
+			return false;
+		}
+
+		return $this->findProductBySupplierRef($supplierId, (string) $line['vendor_ref']) <= 0;
 	}
 
 	/**
@@ -255,15 +278,19 @@ class LmdbRexelPunchoutImporter
 	}
 
 	/**
-	 * Find product by generated Dolibarr reference.
+	 * Find product by Dolibarr reference.
 	 *
-	 * @param string $vendorRef Supplier reference
+	 * @param string $productRef Product reference
 	 * @return int
 	 */
-	private function findProductByGeneratedRef($vendorRef)
+	private function findProductByRef($productRef)
 	{
+		if ($productRef === '') {
+			return 0;
+		}
+
 		$product = new Product($this->db);
-		$result = $product->fetch(0, $this->buildProductRef($vendorRef));
+		$result = $product->fetch(0, $productRef);
 		return $result > 0 ? (int) $product->id : 0;
 	}
 
@@ -272,14 +299,15 @@ class LmdbRexelPunchoutImporter
 	 *
 	 * @param array<string,mixed> $line Line
 	 * @param User                $user User
+	 * @param string              $ref  Product reference
 	 * @return int
 	 */
-	private function createProduct($line, $user)
+	private function createProduct($line, $user, $ref)
 	{
 		global $conf;
 
 		$product = new Product($this->db);
-		$product->ref = $this->buildProductRef((string) $line['vendor_ref']);
+		$product->ref = $ref;
 		$product->label = $this->truncate((string) $line['label'], 255);
 		$product->description = (string) ($line['description'] ?: $line['label']);
 		$product->type = 0;
@@ -373,14 +401,116 @@ class LmdbRexelPunchoutImporter
 	}
 
 	/**
-	 * Build product reference.
+	 * Resolve product reference for a missing Rexel product.
+	 *
+	 * @param array<string,mixed> $line              Line
+	 * @param array<int,string>   $manualProductRefs Manual product refs indexed by session line id
+	 * @return string
+	 */
+	private function resolveProductRef($line, $manualProductRefs)
+	{
+		$mode = LmdbRexelPunchoutConfig::getProductRefMode();
+		if ($mode === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_DOLIBARR) {
+			return $this->buildDolibarrProductRef($line);
+		}
+		if ($mode === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_SUPPLIER_REF) {
+			return $this->buildSupplierProductRef((string) $line['vendor_ref']);
+		}
+		if ($mode === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL) {
+			$lineId = (int) ($line['rowid'] ?? 0);
+			$manualRef = $lineId > 0 && isset($manualProductRefs[$lineId]) ? $manualProductRefs[$lineId] : '';
+			return $this->validateManualProductRef($manualRef, (string) $line['vendor_ref']);
+		}
+
+		return $this->buildPrefixedProductRef((string) $line['vendor_ref']);
+	}
+
+	/**
+	 * Build product reference with the configured prefix.
 	 *
 	 * @param string $vendorRef Supplier ref
 	 * @return string
 	 */
-	private function buildProductRef($vendorRef)
+	private function buildPrefixedProductRef($vendorRef)
 	{
-		return LmdbRexelPunchoutConfig::getString('PRODUCT_REF_PREFIX', 'REXEL-').LmdbRexelPunchoutSecurity::normalizeSupplierReference($vendorRef);
+		return $this->truncate(LmdbRexelPunchoutConfig::getString('PRODUCT_REF_PREFIX', 'REXEL-').LmdbRexelPunchoutSecurity::normalizeSupplierReference($vendorRef), 128);
+	}
+
+	/**
+	 * Build product reference from the Rexel supplier ref.
+	 *
+	 * @param string $vendorRef Supplier ref
+	 * @return string
+	 */
+	private function buildSupplierProductRef($vendorRef)
+	{
+		return $this->truncate(LmdbRexelPunchoutSecurity::normalizeSupplierReference($vendorRef), 128);
+	}
+
+	/**
+	 * Build product reference with the native Dolibarr product numbering module.
+	 *
+	 * @param array<string,mixed> $line Line
+	 * @return string
+	 */
+	private function buildDolibarrProductRef($line)
+	{
+		global $conf;
+
+		require_once DOL_DOCUMENT_ROOT.'/core/modules/product/modules_product.class.php';
+
+		$module = '';
+		if (function_exists('getDolGlobalString')) {
+			$module = getDolGlobalString('PRODUCT_CODEPRODUCT_ADDON', 'mod_codeproduct_leopard');
+		} elseif (!empty($conf->global->PRODUCT_CODEPRODUCT_ADDON)) {
+			$module = (string) $conf->global->PRODUCT_CODEPRODUCT_ADDON;
+		}
+		if ($module === '') {
+			$module = 'mod_codeproduct_leopard';
+		}
+		if (substr($module, 0, 16) === 'mod_codeproduct_' && substr($module, -4) === '.php') {
+			$module = substr($module, 0, -4);
+		}
+
+		$included = function_exists('dol_include_once') ? dol_include_once('/core/modules/product/'.$module.'.php') : include_once DOL_DOCUMENT_ROOT.'/core/modules/product/'.$module.'.php';
+		if ($included <= 0 || !class_exists($module)) {
+			throw new RuntimeException($this->trans('LmdbRexelPunchoutProductNumberingModuleUnavailable', 'Product numbering module is unavailable').': '.$module);
+		}
+
+		$product = new Product($this->db);
+		$product->type = Product::TYPE_PRODUCT;
+		$product->entity = (int) $conf->entity;
+		$product->label = $this->truncate((string) $line['label'], 255);
+		$product->description = (string) ($line['description'] ?: $line['label']);
+
+		/** @var ModeleProductCode $numbering */
+		$numbering = new $module();
+		$nextRef = trim((string) $numbering->getNextValue($product, Product::TYPE_PRODUCT));
+		if ($nextRef === '' || strpos($nextRef, 'Function_getNextValue') !== false) {
+			throw new RuntimeException($this->trans('LmdbRexelPunchoutProductNumberingReturnedEmpty', 'Product numbering module did not return a usable reference').': '.$module);
+		}
+
+		return $this->truncate($nextRef, 128);
+	}
+
+	/**
+	 * Validate a manually entered product reference.
+	 *
+	 * @param string $manualRef Manual product reference
+	 * @param string $vendorRef Supplier reference
+	 * @return string
+	 */
+	private function validateManualProductRef($manualRef, $vendorRef)
+	{
+		$manualRef = trim($manualRef);
+		if ($manualRef === '') {
+			throw new RuntimeException($this->trans('LmdbRexelPunchoutManualProductRefRequired', 'Product reference is required for Rexel reference '.$vendorRef, $vendorRef));
+		}
+		if (preg_match('/[<>]/', $manualRef)) {
+			throw new RuntimeException($this->trans('LmdbRexelPunchoutManualProductRefInvalid', 'Product reference contains invalid characters for Rexel reference '.$vendorRef, $vendorRef));
+		}
+
+		return $this->truncate($manualRef, 128);
 	}
 
 	/**
@@ -589,14 +719,15 @@ class LmdbRexelPunchoutImporter
 	 *
 	 * @param string $key      Translation key
 	 * @param string $fallback Fallback text
+	 * @param string $param1   Optional translation parameter
 	 * @return string
 	 */
-	private function trans($key, $fallback)
+	private function trans($key, $fallback, $param1 = '')
 	{
 		global $langs;
 
 		if (is_object($langs) && method_exists($langs, 'trans')) {
-			$translated = $langs->trans($key);
+			$translated = $param1 !== '' ? $langs->trans($key, $param1) : $langs->trans($key);
 			if ($translated !== $key) {
 				return $translated;
 			}

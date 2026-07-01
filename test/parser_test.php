@@ -87,6 +87,18 @@ if (abs($cxmlLines[0]['tax_amount'] - 2.8) > 0.000001 || $cxmlLines[0]['tax_curr
 	throw new RuntimeException('cXML line tax parser test failed');
 }
 
+$cxmlItemOut = str_replace(array('<ItemIn ', '</ItemIn>'), array('<ItemOut ', '</ItemOut>'), $cxml);
+$cxmlItemOutLines = $parser->parseCxml($cxmlItemOut);
+if (count($cxmlItemOutLines) !== 1 || $cxmlItemOutLines[0]['vendor_ref'] !== '0890108715063') {
+	throw new RuntimeException('cXML ItemOut parser test failed');
+}
+
+$cxmlBuyerPart = str_replace('<SupplierPartID>0890108715063</SupplierPartID>', '<SupplierPartID></SupplierPartID><BuyerPartID>BUY-0890108715063</BuyerPartID>', $cxml);
+$cxmlBuyerPartLines = $parser->parseCxml($cxmlBuyerPart);
+if (count($cxmlBuyerPartLines) !== 1 || $cxmlBuyerPartLines[0]['vendor_ref'] !== 'BUY-0890108715063') {
+	throw new RuntimeException('cXML fallback reference parser test failed');
+}
+
 $cxmlBasket = $parser->parseCxmlBasket($cxml);
 if (count($cxmlBasket['lines']) !== 1 || abs($cxmlBasket['header']['shipping']['amount'] - 5.0) > 0.000001 || $cxmlBasket['header']['shipping']['description'] !== 'Transport') {
 	throw new RuntimeException('cXML basket shipping test failed');

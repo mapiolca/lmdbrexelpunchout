@@ -7,6 +7,10 @@
 class LmdbRexelPunchoutConfig
 {
 	const PREFIX = 'LMDBREXELPUNCHOUT_';
+	const PRODUCT_REF_MODE_PREFIX = 'prefix';
+	const PRODUCT_REF_MODE_DOLIBARR = 'dolibarr';
+	const PRODUCT_REF_MODE_SUPPLIER_REF = 'supplier_ref';
+	const PRODUCT_REF_MODE_MANUAL = 'manual';
 
 	/**
 	 * Get string constant.
@@ -149,6 +153,32 @@ class LmdbRexelPunchoutConfig
 	{
 		$currency = strtoupper(self::getString('CURRENCY', 'EUR'));
 		return preg_match('/^[A-Z]{3}$/', $currency) ? $currency : 'EUR';
+	}
+
+	/**
+	 * Return supported product reference modes.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function getProductRefModes()
+	{
+		return array(
+			self::PRODUCT_REF_MODE_PREFIX,
+			self::PRODUCT_REF_MODE_DOLIBARR,
+			self::PRODUCT_REF_MODE_SUPPLIER_REF,
+			self::PRODUCT_REF_MODE_MANUAL,
+		);
+	}
+
+	/**
+	 * Return configured product reference mode.
+	 *
+	 * @return string
+	 */
+	public static function getProductRefMode()
+	{
+		$mode = self::getString('PRODUCT_REF_MODE', self::PRODUCT_REF_MODE_PREFIX);
+		return in_array($mode, self::getProductRefModes(), true) ? $mode : self::PRODUCT_REF_MODE_PREFIX;
 	}
 
 	/**
