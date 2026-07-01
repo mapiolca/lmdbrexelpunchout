@@ -201,6 +201,7 @@ class LmdbRexelPunchoutParser
 				'total' => $this->emptyMoney(),
 				'shipping' => $this->emptyMoney(false),
 				'tax' => $this->emptyMoney(),
+				'deee' => $this->emptyMoney(false),
 				'ship_to' => array(),
 			);
 		}
@@ -210,13 +211,122 @@ class LmdbRexelPunchoutParser
 		$shipping['description'] = $this->xpathText($xpath, './*[local-name()="Shipping"]/*[local-name()="Description"]', $headerNode);
 		$tax = $this->parseMoney($xpath, './*[local-name()="Tax"]/*[local-name()="Money"]', $headerNode);
 		$tax['description'] = $this->xpathText($xpath, './*[local-name()="Tax"]/*[local-name()="Description"]', $headerNode);
+		$deee = $this->parseHeaderDeee($xpath, $headerNode);
 
 		return array(
 			'total' => $total,
 			'shipping' => $shipping,
 			'tax' => $tax,
+			'deee' => $deee,
 			'ship_to' => $this->parseShipTo($xpath, $headerNode),
 		);
+	}
+
+	/**
+	 * Parse header-level DEEE ecocontribution from controlled cXML Extrinsic names.
+	 *
+	 * @param DOMXPath $xpath      XPath object
+	 * @param DOMNode  $headerNode Header node
+	 * @return array<string,mixed>
+	 */
+	private function parseHeaderDeee($xpath, $headerNode)
+	{
+		$supportedNames = array(
+			'deee',
+			'weee',
+			'ecocontribution',
+			'ecoparticipation',
+			'ecocontributiondeee',
+			'ecoparticipationdeee',
+			'ecotax',
+			'weeefee',
+		);
+		$extrinsics = $xpath->query('./*[local-name()="Extrinsic"]', $headerNode);
+		if ($extrinsics === false) {
+			return $this->emptyMoney(false);
+		}
+		foreach ($extrinsics as $extrinsic) {
+			if (!$extrinsic instanceof DOMElement) {
+				continue;
+			}
+			$name = $extrinsic->hasAttribute('name') ? $extrinsic->getAttribute('name') : '';
+			if (!in_array($this->normalizeExtrinsicName($name), $supportedNames, true)) {
+				continue;
+			}
+
+			$money = $this->parseExtrinsicMoney($xpath, $extrinsic);
+			if (!empty($money['has_value'])) {
+				$money['description'] = $name;
+				return $money;
+			}
+		}
+
+		return $this->emptyMoney(false);
+	}
+
+	/**
+	 * Parse a Money value or scalar amount from an Extrinsic node.
+	 *
+	 * @param DOMXPath  $xpath     XPath object
+	 * @param DOMElement $extrinsic Extrinsic node
+	 * @return array{amount:float,currency:string,has_value:bool}
+	 */
+	private function parseExtrinsicMoney($xpath, $extrinsic)
+	{
+		$moneyNodes = $xpath->query('.//*[local-name()="Money"]', $extrinsic);
+		$moneyNode = $moneyNodes !== false ? $moneyNodes->item(0) : null;
+		if ($moneyNode) {
+			return $this->parseMoney($xpath, './/*[local-name()="Money"]', $extrinsic);
+		}
+
+		$text = trim($extrinsic->textContent);
+		if ($text === '') {
+			return $this->emptyMoney(false);
+		}
+
+		$currency = $extrinsic->hasAttribute('currency') ? strtoupper($extrinsic->getAttribute('currency')) : LmdbRexelPunchoutConfig::getExpectedCurrency();
+		if (preg_match('/\b([A-Z]{3})\b/i', $text, $matches)) {
+			$currency = strtoupper($matches[1]);
+		}
+		$amount = 0.0;
+		if (preg_match('/[-+]?\d+(?:[\s.,]\d+)*/', $text, $matches)) {
+			$amount = self::toFloat($matches[0]);
+		}
+
+		return array(
+			'amount' => $amount,
+			'currency' => $currency,
+			'has_value' => true,
+		);
+	}
+
+	/**
+	 * Normalize supplier-specific Extrinsic names.
+	 *
+	 * @param string $name Raw name
+	 * @return string
+	 */
+	private function normalizeExtrinsicName($name)
+	{
+		$name = strtr(strtolower($name), array(
+			'à' => 'a',
+			'â' => 'a',
+			'ä' => 'a',
+			'é' => 'e',
+			'è' => 'e',
+			'ê' => 'e',
+			'ë' => 'e',
+			'î' => 'i',
+			'ï' => 'i',
+			'ô' => 'o',
+			'ö' => 'o',
+			'ù' => 'u',
+			'û' => 'u',
+			'ü' => 'u',
+			'ç' => 'c',
+		));
+
+		return (string) preg_replace('/[^a-z0-9]+/', '', $name);
 	}
 
 	/**

@@ -7,7 +7,7 @@ LmdbRexelPunchoutCompatibilityPageHelp=Contrôle de compatibilité de l’enviro
 LmdbRexelPunchoutSessionsPageHelp=Suivi des sessions Punchout Rexel et de leur état d’import.
 LmdbRexelPunchoutAboutPageHelp=Informations de version, compatibilité et maintenance du module.
 LmdbRexelPunchoutDependencies=Modules Fournisseurs et Produits/Services.
-LmdbRexelPunchoutMainFeatures=Bouton Punchout sur commande fournisseur Rexel brouillon, lancement PunchOutSetupRequest, retour PunchOutOrderMessage, création produit optionnelle, mise à jour des prix fournisseur, import sécurisé des lignes et frais de port cXML.
+LmdbRexelPunchoutMainFeatures=Bouton Punchout sur commande fournisseur Rexel brouillon, lancement PunchOutSetupRequest, retour PunchOutOrderMessage, création produit optionnelle, mise à jour des prix fournisseur, import sécurisé des lignes, frais de port cXML et écocontribution DEEE.
 LmdbRexelPunchoutLicenseInfo=Voir le fichier LICENSE du module.
 
 LmdbRexelPunchoutRightUse=Utiliser le Punchout Rexel
@@ -58,6 +58,11 @@ LmdbRexelPunchoutCxmlShippingProduct=Produit/service de frais de port
 LmdbRexelPunchoutCxmlShippingProductHelp=Optionnel. Si aucun produit/service n’est sélectionné, les frais de port positifs sont ajoutés en ligne libre.
 LmdbRexelPunchoutCxmlShippingVatRate=Taux de TVA des frais de port
 LmdbRexelPunchoutCxmlShippingVatRateHelp=Optionnel. Laisser vide pour utiliser le taux commun des lignes ou la TVA par défaut.
+LmdbRexelPunchoutCxmlImportDeee=Importer l’écocontribution DEEE cXML
+LmdbRexelPunchoutCxmlDeeeProduct=Produit/service d’écocontribution DEEE
+LmdbRexelPunchoutCxmlDeeeProductHelp=Optionnel. Si aucun produit/service n’est sélectionné, la DEEE positive est ajoutée en ligne libre.
+LmdbRexelPunchoutCxmlDeeeVatRate=Taux de TVA de l’écocontribution DEEE
+LmdbRexelPunchoutCxmlDeeeVatRateHelp=Optionnel. Laisser vide pour utiliser le taux commun des lignes ou la TVA par défaut.
 
 LmdbRexelPunchoutUnitMapping=Correspondance des unités fournisseur
 LmdbRexelPunchoutUnitCode=Unité fournisseur
@@ -80,19 +85,23 @@ LmdbRexelPunchoutSessionUserMismatch=Cette session Punchout appartient à un aut
 
 LmdbRexelPunchoutReturnTitle=Retour Punchout Rexel
 LmdbRexelPunchoutReturnFailed=Échec du retour Punchout :
-LmdbRexelPunchoutBasketStored=Panier Punchout reçu. L’import doit être confirmé depuis une session Dolibarr authentifiée.
-LmdbRexelPunchoutOpenImportPage=Ouvrir l’import du panier
+LmdbRexelPunchoutBasketStored=Panier Punchout reçu et importé automatiquement.
 LmdbRexelPunchoutImportBasket=Importer le panier Punchout
 LmdbRexelPunchoutImportSuccess=%s ligne(s) importée(s), %s produit(s) créé(s), %s prix fournisseur mis à jour.
 LmdbRexelPunchoutImportFailed=Échec de l’import Punchout :
 LmdbRexelPunchoutManualProductRef=Référence produit
+LmdbRexelPunchoutManualProductRefIntro=Saisissez une référence produit uniquement pour les lignes REXEL absentes de la bibliothèque.
 LmdbRexelPunchoutManualProductRefRequired=La référence produit est obligatoire pour la référence REXEL %s.
 LmdbRexelPunchoutManualProductRefInvalid=La référence produit contient des caractères invalides pour la référence REXEL %s.
+LmdbRexelPunchoutManualProductRefNotExpected=Aucune saisie manuelle de référence produit n’est attendue pour cette session.
+LmdbRexelPunchoutNoManualProductRefNeeded=Aucune ligne ne nécessite de référence produit manuelle.
 LmdbRexelPunchoutProductAlreadyLinked=Produit déjà lié
 LmdbRexelPunchoutProductNumberingModuleUnavailable=Le module de numérotation produit configuré est indisponible
 LmdbRexelPunchoutProductNumberingReturnedEmpty=Le module de numérotation produit n’a pas fourni de référence utilisable
 LmdbRexelPunchoutShippingLineLabel=Frais de port Rexel
 LmdbRexelPunchoutShippingImportDisabled=Les frais de port cXML n’ont pas été importés car l’option est désactivée.
+LmdbRexelPunchoutDeeeLineLabel=Écocontribution DEEE Rexel
+LmdbRexelPunchoutDeeeImportDisabled=L’écocontribution DEEE cXML n’a pas été importée car l’option est désactivée.
 
 LmdbRexelPunchoutSessions=Sessions Punchout
 LmdbRexelPunchoutStatusCreated=Créée

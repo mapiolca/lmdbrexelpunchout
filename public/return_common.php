@@ -6,6 +6,10 @@
  */
 
 require_once __DIR__.'/../lib/lmdbrexelpunchout.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+require_once __DIR__.'/../class/lmdbrexelpunchoutconfig.class.php';
+require_once __DIR__.'/../class/lmdbrexelpunchoutimporter.class.php';
+require_once __DIR__.'/../class/lmdbrexelpunchoutsecurity.class.php';
 
 /**
  * Store a returned basket.
@@ -42,25 +46,89 @@ function lmdbrexelpunchoutStoreReturn($session, $protocol, $rawPayload, $lines, 
 }
 
 /**
- * Render final return page and offer authenticated import.
+ * Import a stored return immediately, or redirect to manual reference input.
  *
  * @param LmdbRexelPunchoutSession $session Session
  * @return void
  */
-function lmdbrexelpunchoutRenderReturnStored($session)
+function lmdbrexelpunchoutHandleStoredReturn($session)
+{
+	global $db;
+
+	$importer = new LmdbRexelPunchoutImporter($db);
+	$importUser = lmdbrexelpunchoutLoadImportUser($session);
+	if (LmdbRexelPunchoutConfig::getProductRefMode() === LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL && count($importer->getLinesNeedingManualProductRefs($session)) > 0) {
+		header('Location: '.dol_buildpath('/lmdbrexelpunchout/public/import.php', 1).'?id='.(int) $session->id);
+		exit;
+	}
+
+	$summary = $importer->importStoredSession($session, $importUser);
+	lmdbrexelpunchoutRenderImportResult($session, $summary);
+}
+
+/**
+ * Load and validate the user stored on the Punchout session.
+ *
+ * @param LmdbRexelPunchoutSession $session Session
+ * @return User
+ */
+function lmdbrexelpunchoutLoadImportUser($session)
+{
+	global $db, $langs;
+
+	$importUser = new User($db);
+	if ((int) $session->fk_user <= 0 || $importUser->fetch((int) $session->fk_user) <= 0) {
+		throw new RuntimeException($langs->trans('LmdbRexelPunchoutImportUserNotFound'));
+	}
+	if (method_exists($importUser, 'loadRights')) {
+		$importUser->loadRights();
+	}
+	if (!LmdbRexelPunchoutSecurity::canUsePunchout($importUser)) {
+		throw new RuntimeException($langs->trans('LmdbRexelPunchoutImportUserNoRight'));
+	}
+
+	return $importUser;
+}
+
+/**
+ * Render an import result page and return to the supplier order.
+ *
+ * @param LmdbRexelPunchoutSession $session Session
+ * @param array<string,mixed>      $summary Import summary
+ * @return void
+ */
+function lmdbrexelpunchoutRenderImportResult($session, $summary)
 {
 	global $langs;
 
 	$orderUrl = DOL_URL_ROOT.'/fourn/commande/card.php?id='.(int) $session->fk_commandefourn;
-	$importUrl = dol_buildpath('/lmdbrexelpunchout/public/import.php', 1).'?id='.(int) $session->id;
+	$message = lmdbrexelpunchoutBuildImportMessage($summary);
 
-	llxHeader('', $langs->trans('LmdbRexelPunchoutReturnTitle'));
-	print load_fiche_titre($langs->trans('LmdbRexelPunchoutReturnTitle'), '', 'technic');
-	print '<div class="ok">'.$langs->trans('LmdbRexelPunchoutBasketStored').'</div>';
-	print '<p><a class="button button-save" href="'.dol_escape_htmltag($importUrl).'">'.$langs->trans('LmdbRexelPunchoutOpenImportPage').'</a></p>';
+	llxHeader('', $langs->trans('LmdbRexelPunchoutImportBasket'));
+	print load_fiche_titre($langs->trans('LmdbRexelPunchoutImportBasket'), '', 'technic');
+	print '<div class="ok">'.$message.'</div>';
+	lmdbrexelpunchoutPrintReturnToSupplierOrderJavascript($orderUrl, 800);
 	print '<p>'.lmdbrexelpunchoutGetReturnToSupplierOrderButton($orderUrl, 'button button-save').'</p>';
 	llxFooter();
 	exit;
+}
+
+/**
+ * Build the localized import success message.
+ *
+ * @param array<string,mixed> $summary Import summary
+ * @return string
+ */
+function lmdbrexelpunchoutBuildImportMessage($summary)
+{
+	global $langs;
+
+	$message = $langs->trans('LmdbRexelPunchoutImportSuccess', (int) $summary['lines_added'], (int) $summary['products_created'], (int) $summary['supplier_prices_updated']);
+	if (!empty($summary['warnings']) && is_array($summary['warnings'])) {
+		$message .= '<br>'.dol_escape_htmltag(implode(', ', $summary['warnings']));
+	}
+
+	return $message;
 }
 
 /**

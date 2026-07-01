@@ -71,7 +71,7 @@ require_once __DIR__.'/../class/lmdbrexelpunchoutcxmlpayload.class.php';
 
 $parser = new LmdbRexelPunchoutParser();
 
-$cxml = '<?xml version="1.0"?><cXML><Message><PunchOutOrderMessage><BuyerCookie>buyer-cookie</BuyerCookie><PunchOutOrderMessageHeader><Total><Money currency="EUR">19.40</Money></Total><ShipTo><Address addressID="ADDR1"><Name xml:lang="fr">Adresse principale</Name><PostalAddress><DeliverTo>Magasin</DeliverTo><Street>4 RUE ALFRED KASTLER</Street><Street>Bâtiment A</Street><City>MIOS</City><State>Gironde</State><PostalCode>33380</PostalCode><Country isoCountryCode="FR">France</Country></PostalAddress></Address></ShipTo><Shipping><Money currency="EUR">5.00</Money><Description xml:lang="fr">Transport</Description></Shipping><Tax><Money currency="EUR">3.40</Money><Description xml:lang="fr">TVA</Description></Tax></PunchOutOrderMessageHeader><ItemIn quantity="2" lineNumber="10"><ItemID><SupplierPartID>0890108715063</SupplierPartID><SupplierPartAuxiliaryID>AUX-1</SupplierPartAuxiliaryID></ItemID><ItemDetail><UnitPrice><Money currency="EUR">7.00</Money></UnitPrice><Description xml:lang="fr"><ShortName>Disjoncteur</ShortName>Disjoncteur modulaire 10A</Description><UnitOfMeasure>EA</UnitOfMeasure><Classification domain="UNSPSC">39121603</Classification></ItemDetail><Tax><Money currency="EUR">2.80</Money><TaxDetail category="FullTax" percentageRate="20.000"></TaxDetail></Tax></ItemIn></PunchOutOrderMessage></Message></cXML>';
+$cxml = '<?xml version="1.0"?><cXML><Message><PunchOutOrderMessage><BuyerCookie>buyer-cookie</BuyerCookie><PunchOutOrderMessageHeader><Total><Money currency="EUR">19.40</Money></Total><ShipTo><Address addressID="ADDR1"><Name xml:lang="fr">Adresse principale</Name><PostalAddress><DeliverTo>Magasin</DeliverTo><Street>4 RUE ALFRED KASTLER</Street><Street>Bâtiment A</Street><City>MIOS</City><State>Gironde</State><PostalCode>33380</PostalCode><Country isoCountryCode="FR">France</Country></PostalAddress></Address></ShipTo><Shipping><Money currency="EUR">5.00</Money><Description xml:lang="fr">Transport</Description></Shipping><Tax><Money currency="EUR">3.40</Money><Description xml:lang="fr">TVA</Description></Tax><Extrinsic name="ecoContribution">1,23 EUR</Extrinsic></PunchOutOrderMessageHeader><ItemIn quantity="2" lineNumber="10"><ItemID><SupplierPartID>0890108715063</SupplierPartID><SupplierPartAuxiliaryID>AUX-1</SupplierPartAuxiliaryID></ItemID><ItemDetail><UnitPrice><Money currency="EUR">7.00</Money></UnitPrice><Description xml:lang="fr"><ShortName>Disjoncteur</ShortName>Disjoncteur modulaire 10A</Description><UnitOfMeasure>EA</UnitOfMeasure><Classification domain="UNSPSC">39121603</Classification></ItemDetail><Tax><Money currency="EUR">2.80</Money><TaxDetail category="FullTax" percentageRate="20.000"></TaxDetail></Tax></ItemIn></PunchOutOrderMessage></Message></cXML>';
 
 $cxmlLines = $parser->parseCxml($cxml);
 if (count($cxmlLines) !== 1 || $cxmlLines[0]['vendor_ref'] !== '0890108715063' || abs($cxmlLines[0]['unit_price_ht'] - 7.0) > 0.000001) {
@@ -103,6 +103,9 @@ $cxmlBasket = $parser->parseCxmlBasket($cxml);
 if (count($cxmlBasket['lines']) !== 1 || abs($cxmlBasket['header']['shipping']['amount'] - 5.0) > 0.000001 || $cxmlBasket['header']['shipping']['description'] !== 'Transport') {
 	throw new RuntimeException('cXML basket shipping test failed');
 }
+if (abs($cxmlBasket['header']['deee']['amount'] - 1.23) > 0.000001 || $cxmlBasket['header']['deee']['currency'] !== 'EUR' || empty($cxmlBasket['header']['deee']['has_value'])) {
+	throw new RuntimeException('cXML basket DEEE test failed');
+}
 if (abs($cxmlBasket['header']['total']['amount'] - 19.4) > 0.000001 || abs($cxmlBasket['header']['tax']['amount'] - 3.4) > 0.000001) {
 	throw new RuntimeException('cXML basket total/tax test failed');
 }
@@ -117,6 +120,12 @@ $cxmlNoShipping = str_replace('<Shipping><Money currency="EUR">5.00</Money><Desc
 $noShippingBasket = $parser->parseCxmlBasket($cxmlNoShipping);
 if (!empty($noShippingBasket['header']['shipping']['has_value']) || abs($noShippingBasket['header']['shipping']['amount']) > 0.000001) {
 	throw new RuntimeException('cXML no shipping parser test failed');
+}
+
+$cxmlNoDeee = str_replace('<Extrinsic name="ecoContribution">1,23 EUR</Extrinsic>', '', $cxml);
+$noDeeeBasket = $parser->parseCxmlBasket($cxmlNoDeee);
+if (!empty($noDeeeBasket['header']['deee']['has_value']) || abs($noDeeeBasket['header']['deee']['amount']) > 0.000001) {
+	throw new RuntimeException('cXML no DEEE parser test failed');
 }
 
 $client = new LmdbRexelPunchoutCxmlClient();

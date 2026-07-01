@@ -7,7 +7,7 @@ LmdbRexelPunchoutCompatibilityPageHelp=Dolibarr and PHP environment compatibilit
 LmdbRexelPunchoutSessionsPageHelp=Rexel Punchout session tracking and import status.
 LmdbRexelPunchoutAboutPageHelp=Version, compatibility, and maintenance information for the module.
 LmdbRexelPunchoutDependencies=Supplier and Products/Services modules.
-LmdbRexelPunchoutMainFeatures=Punchout button on draft Rexel supplier orders, PunchOutSetupRequest launch, PunchOutOrderMessage return, optional product creation, supplier price update, secure line import, and cXML shipping fees.
+LmdbRexelPunchoutMainFeatures=Punchout button on draft Rexel supplier orders, PunchOutSetupRequest launch, PunchOutOrderMessage return, optional product creation, supplier price update, secure line import, cXML shipping fees, and DEEE ecocontribution.
 LmdbRexelPunchoutLicenseInfo=See the module LICENSE file.
 
 LmdbRexelPunchoutRightUse=Use Rexel Punchout
@@ -58,6 +58,11 @@ LmdbRexelPunchoutCxmlShippingProduct=Shipping fee product/service
 LmdbRexelPunchoutCxmlShippingProductHelp=Optional. If no product/service is selected, positive shipping fees are added as a free line.
 LmdbRexelPunchoutCxmlShippingVatRate=Shipping fee VAT rate
 LmdbRexelPunchoutCxmlShippingVatRateHelp=Optional. Leave empty to use the common line VAT rate or the default VAT rate.
+LmdbRexelPunchoutCxmlImportDeee=Import cXML DEEE ecocontribution
+LmdbRexelPunchoutCxmlDeeeProduct=DEEE ecocontribution product/service
+LmdbRexelPunchoutCxmlDeeeProductHelp=Optional. If no product/service is selected, positive DEEE is added as a free line.
+LmdbRexelPunchoutCxmlDeeeVatRate=DEEE ecocontribution VAT rate
+LmdbRexelPunchoutCxmlDeeeVatRateHelp=Optional. Leave empty to use the common line VAT rate or the default VAT rate.
 
 LmdbRexelPunchoutUnitMapping=Supplier unit mapping
 LmdbRexelPunchoutUnitCode=Supplier unit
@@ -80,19 +85,23 @@ LmdbRexelPunchoutSessionUserMismatch=This Punchout session belongs to another us
 
 LmdbRexelPunchoutReturnTitle=Rexel Punchout return
 LmdbRexelPunchoutReturnFailed=Punchout return failed:
-LmdbRexelPunchoutBasketStored=Punchout basket received. Import must be confirmed from an authenticated Dolibarr session.
-LmdbRexelPunchoutOpenImportPage=Open basket import
+LmdbRexelPunchoutBasketStored=Punchout basket received and imported automatically.
 LmdbRexelPunchoutImportBasket=Import Punchout basket
 LmdbRexelPunchoutImportSuccess=%s line(s) imported, %s product(s) created, %s supplier price(s) updated.
 LmdbRexelPunchoutImportFailed=Punchout import failed:
 LmdbRexelPunchoutManualProductRef=Product reference
+LmdbRexelPunchoutManualProductRefIntro=Enter a product reference only for REXEL lines missing from the product library.
 LmdbRexelPunchoutManualProductRefRequired=Product reference is required for REXEL reference %s.
 LmdbRexelPunchoutManualProductRefInvalid=Product reference contains invalid characters for REXEL reference %s.
+LmdbRexelPunchoutManualProductRefNotExpected=No manual product reference input is expected for this session.
+LmdbRexelPunchoutNoManualProductRefNeeded=No line requires a manual product reference.
 LmdbRexelPunchoutProductAlreadyLinked=Product already linked
 LmdbRexelPunchoutProductNumberingModuleUnavailable=Configured product numbering module is unavailable
 LmdbRexelPunchoutProductNumberingReturnedEmpty=Product numbering module did not return a usable reference
 LmdbRexelPunchoutShippingLineLabel=Rexel shipping fees
 LmdbRexelPunchoutShippingImportDisabled=cXML shipping fees were not imported because the option is disabled.
+LmdbRexelPunchoutDeeeLineLabel=Rexel DEEE ecocontribution
+LmdbRexelPunchoutDeeeImportDisabled=cXML DEEE ecocontribution was not imported because the option is disabled.
 
 LmdbRexelPunchoutSessions=Punchout sessions
 LmdbRexelPunchoutStatusCreated=Created

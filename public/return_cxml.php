@@ -67,7 +67,7 @@ try {
 	$parser = new LmdbRexelPunchoutParser();
 	$basket = $parser->parseCxmlBasket($rawPayload);
 	lmdbrexelpunchoutStoreReturn($session, 'CXML', $rawPayload, $basket['lines'], $basket);
-	lmdbrexelpunchoutRenderReturnStored($session);
+	lmdbrexelpunchoutHandleStoredReturn($session);
 } catch (Exception $e) {
 	$session->setStatus(LmdbRexelPunchoutSession::STATUS_ERROR, $e->getMessage());
 	lmdbrexelpunchoutRenderReturnError($e);

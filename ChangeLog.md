@@ -6,7 +6,7 @@
 - Renommage complet du module en `lmdbrexelpunchout` / `LmdbRexelPunchout`.
 - Conservation du seul flux Punchout cXML : `PunchOutSetupRequest`, `PunchOutSetupResponse` et `PunchOutOrderMessage`.
 - Acceptation des lignes cXML `ItemOut` et des références alternatives lorsque `SupplierPartID` est vide afin d’éviter les paniers Rexel rejetés comme sans ligne.
-- Conservation d'un retour cXML public limité au stockage du panier, avec import confirmé depuis une page authentifiée et protégée par token CSRF.
+- Import immédiat au retour cXML avec l’utilisateur Dolibarr qui a lancé la session Punchout, sauf saisie directe des références lorsque le mode manuel est nécessaire.
 - Suppression des anciens protocoles non cXML, pages de retour associées, parsers et tests dédiés.
 - Suppression des anciennes logiques fournisseur spécifiques : création automatique de fournisseur, barèmes dédiés, pages associées et fallbacks fiscaux dédiés.
 - Ajout de la sélection explicite du fournisseur Rexel dans les réglages du module.
@@ -15,6 +15,8 @@
 - Conservation du cron natif de nettoyage des sessions et payloads sous la classe `LmdbRexelPunchoutCron`.
 - Ajout d'un bouton de réglage pour créer ou associer automatiquement le tiers fournisseur REXEL France.
 - Ajout d'une stratégie configurable de référence produit pour les produits REXEL absents : préfixe configuré, numérotation native Produits/Services, référence REXEL ou choix manuel à l'import.
+- Ajout de l’import de l’écocontribution DEEE cXML comme ligne de commande fournisseur, sur le même modèle que les frais de port.
+- Reprise du pictogramme du module `rexelsync` pour le module Punchout.
 - Mise à jour des traductions, de la documentation et des tests légers pour le périmètre cXML uniquement.
 
 ## 1.0.0 - 2026-07-01

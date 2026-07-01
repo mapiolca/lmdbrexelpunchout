@@ -45,6 +45,11 @@ class LmdbRexelPunchoutImporter
 			'shipping_amount' => 0.0,
 			'shipping_currency' => '',
 			'shipping_skipped_reason' => '',
+			'deee_lines_added' => 0,
+			'deee_detected' => false,
+			'deee_amount' => 0.0,
+			'deee_currency' => '',
+			'deee_skipped_reason' => '',
 			'products_created' => 0,
 			'supplier_prices_updated' => 0,
 			'warnings' => array(),
@@ -181,6 +186,7 @@ class LmdbRexelPunchoutImporter
 		}
 
 		$this->importCxmlShippingLine($session, $order, $lines, $summary);
+		$this->importCxmlDeeeLine($session, $order, $lines, $summary);
 
 		$order->update_price(1, 'auto', 0, $order->thirdparty);
 
@@ -204,6 +210,28 @@ class LmdbRexelPunchoutImporter
 		}
 
 		return $this->findProductBySupplierRef($supplierId, (string) $line['vendor_ref']) <= 0;
+	}
+
+	/**
+	 * Return session lines requiring a manual product reference.
+	 *
+	 * @param LmdbRexelPunchoutSession $session Session
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function getLinesNeedingManualProductRefs($session)
+	{
+		$manualLines = array();
+		if (LmdbRexelPunchoutConfig::getProductRefMode() !== LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL) {
+			return $manualLines;
+		}
+
+		foreach ($session->fetchLines() as $line) {
+			if ($this->lineNeedsManualProductRef((int) $session->fk_soc, $line)) {
+				$manualLines[] = $line;
+			}
+		}
+
+		return $manualLines;
 	}
 
 	/**
@@ -589,6 +617,65 @@ class LmdbRexelPunchoutImporter
 	}
 
 	/**
+	 * Add cXML DEEE ecocontribution as a supplier order line when requested.
+	 *
+	 * @param LmdbRexelPunchoutSession       $session Session
+	 * @param CommandeFournisseur            $order   Supplier order
+	 * @param array<int,array<string,mixed>> $lines   Normalized item lines
+	 * @param array<string,mixed>            $summary Import summary
+	 * @return void
+	 */
+	private function importCxmlDeeeLine($session, $order, $lines, &$summary)
+	{
+		$basket = $this->decodeBasketPayload($session);
+		$deee = isset($basket['header']) && is_array($basket['header']) && isset($basket['header']['deee']) && is_array($basket['header']['deee']) ? $basket['header']['deee'] : array();
+		$deeeDetected = !empty($deee['has_value']) || array_key_exists('amount', $deee) || array_key_exists('currency', $deee);
+		if (!$deeeDetected) {
+			$summary['deee_skipped_reason'] = 'not_present';
+			return;
+		}
+
+		$deeeAmount = (float) ($deee['amount'] ?? 0);
+		$expectedCurrency = LmdbRexelPunchoutConfig::getExpectedCurrency();
+		$deeeCurrency = strtoupper((string) ($deee['currency'] ?? $expectedCurrency));
+		$deeeVatRate = $this->getDeeeVatRate($lines);
+
+		$summary['deee_detected'] = true;
+		$summary['deee_amount'] = $deeeAmount;
+		$summary['deee_currency'] = $deeeCurrency;
+
+		if ($deeeCurrency !== $expectedCurrency) {
+			throw new RuntimeException('Unexpected cXML DEEE currency: '.$deeeCurrency.' (expected '.$expectedCurrency.')');
+		}
+
+		if ($deeeAmount <= 0) {
+			$summary['deee_skipped_reason'] = 'zero_amount';
+			return;
+		}
+
+		if (!LmdbRexelPunchoutConfig::getInt('CXML_IMPORT_DEEE', 1)) {
+			$summary['deee_skipped_reason'] = 'disabled';
+			$summary['warnings'][] = $this->trans('LmdbRexelPunchoutDeeeImportDisabled', 'cXML DEEE ecocontribution was not imported because the option is disabled');
+			return;
+		}
+
+		$result = $this->addCxmlChargeLine(
+			$order,
+			$this->buildDeeeDescription($deee),
+			$deeeAmount,
+			$deeeVatRate,
+			LmdbRexelPunchoutConfig::getInt('CXML_DEEE_FK_PRODUCT'),
+			'Configured cXML DEEE product/service not found: #',
+			'Unable to add cXML DEEE supplier order line'
+		);
+
+		$summary['lines_added']++;
+		$summary['deee_lines_added'] = 1;
+		$summary['deee_order_line_id'] = (int) $result;
+		$summary['deee_skipped_reason'] = '';
+	}
+
+	/**
 	 * Add a supplier order charge line.
 	 *
 	 * @param CommandeFournisseur $order                 Supplier order
@@ -673,6 +760,23 @@ class LmdbRexelPunchoutImporter
 	}
 
 	/**
+	 * Build the supplier order description for DEEE ecocontribution.
+	 *
+	 * @param array<string,mixed> $deee DEEE metadata
+	 * @return string
+	 */
+	private function buildDeeeDescription($deee)
+	{
+		$label = $this->trans('LmdbRexelPunchoutDeeeLineLabel', 'Écocontribution DEEE Rexel');
+		$description = trim((string) ($deee['description'] ?? ''));
+		if ($description !== '' && $description !== $label) {
+			$label .= "\n".$description;
+		}
+
+		return $label;
+	}
+
+	/**
 	 * Resolve VAT rate for cXML shipping fees.
 	 *
 	 * @param array<int,array<string,mixed>> $lines Normalized item lines
@@ -681,6 +785,22 @@ class LmdbRexelPunchoutImporter
 	private function getShippingVatRate($lines)
 	{
 		$configuredVat = trim(LmdbRexelPunchoutConfig::getString('CXML_SHIPPING_VAT_RATE'));
+		if ($configuredVat !== '') {
+			return LmdbRexelPunchoutParser::toFloat($configuredVat);
+		}
+
+		return $this->getCommonVatRate($lines);
+	}
+
+	/**
+	 * Resolve VAT rate for cXML DEEE ecocontribution.
+	 *
+	 * @param array<int,array<string,mixed>> $lines Normalized item lines
+	 * @return float
+	 */
+	private function getDeeeVatRate($lines)
+	{
+		$configuredVat = trim(LmdbRexelPunchoutConfig::getString('CXML_DEEE_VAT_RATE'));
 		if ($configuredVat !== '') {
 			return LmdbRexelPunchoutParser::toFloat($configuredVat);
 		}

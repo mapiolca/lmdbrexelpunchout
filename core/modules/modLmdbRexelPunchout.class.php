@@ -37,7 +37,7 @@ class modLmdbRexelPunchout extends DolibarrModules
 		$this->descriptionlong = 'LmdbRexelPunchoutModuleDescriptionLong';
 		$this->version = '1.0.0';
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
-		$this->picto = 'lmdbrexelpunchout.png@lmdbrexelpunchout';
+		$this->picto = 'lmdbrexelpunchout@lmdbrexelpunchout';
 		$this->editor_name = 'Les Métiers du Bâtiment';
 		$this->editor_url = 'https://lesmetiersdubatiment.fr';
 
@@ -86,6 +86,9 @@ class modLmdbRexelPunchout extends DolibarrModules
 			21 => array('LMDBREXELPUNCHOUT_CXML_IMPORT_SHIPPING', 'chaine', '1', 'Import cXML shipping fees', 0, 'current', 1),
 			22 => array('LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT', 'chaine', '0', 'Optional product/service for cXML shipping fees', 0, 'current', 1),
 			23 => array('LMDBREXELPUNCHOUT_CXML_SHIPPING_VAT_RATE', 'chaine', '', 'Optional VAT rate for cXML shipping fees', 0, 'current', 1),
+			24 => array('LMDBREXELPUNCHOUT_CXML_IMPORT_DEEE', 'chaine', '1', 'Import cXML DEEE ecocontribution', 0, 'current', 1),
+			25 => array('LMDBREXELPUNCHOUT_CXML_DEEE_FK_PRODUCT', 'chaine', '0', 'Optional product/service for cXML DEEE ecocontribution', 0, 'current', 1),
+			26 => array('LMDBREXELPUNCHOUT_CXML_DEEE_VAT_RATE', 'chaine', '', 'Optional VAT rate for cXML DEEE ecocontribution', 0, 'current', 1),
 		);
 
 		$this->tabs = array();

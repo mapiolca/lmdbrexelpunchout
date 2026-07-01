@@ -78,6 +78,8 @@ if ($action === 'save_settings') {
 		'CXML_LANG' => GETPOST('LMDBREXELPUNCHOUT_CXML_LANG', 'alphanohtml'),
 		'CXML_SHIPPING_FK_PRODUCT' => (string) GETPOSTINT('LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT'),
 		'CXML_SHIPPING_VAT_RATE' => trim(GETPOST('LMDBREXELPUNCHOUT_CXML_SHIPPING_VAT_RATE', 'alphanohtml')),
+		'CXML_DEEE_FK_PRODUCT' => (string) GETPOSTINT('LMDBREXELPUNCHOUT_CXML_DEEE_FK_PRODUCT'),
+		'CXML_DEEE_VAT_RATE' => trim(GETPOST('LMDBREXELPUNCHOUT_CXML_DEEE_VAT_RATE', 'alphanohtml')),
 		'OPEN_MODE' => strtolower(GETPOST('LMDBREXELPUNCHOUT_OPEN_MODE', 'alpha')),
 		'CURRENCY' => strtoupper(GETPOST('LMDBREXELPUNCHOUT_CURRENCY', 'alpha')),
 		'DEFAULT_VAT' => GETPOST('LMDBREXELPUNCHOUT_DEFAULT_VAT', 'alphanohtml'),
@@ -110,6 +112,9 @@ if ($action === 'save_settings') {
 	}
 	if ($settings['CXML_SHIPPING_VAT_RATE'] !== '' && !is_numeric(str_replace(',', '.', $settings['CXML_SHIPPING_VAT_RATE']))) {
 		$settings['CXML_SHIPPING_VAT_RATE'] = '';
+	}
+	if ($settings['CXML_DEEE_VAT_RATE'] !== '' && !is_numeric(str_replace(',', '.', $settings['CXML_DEEE_VAT_RATE']))) {
+		$settings['CXML_DEEE_VAT_RATE'] = '';
 	}
 
 	foreach ($settings as $key => $value) {
@@ -197,7 +202,7 @@ $productRefModeOptions = array(
 	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_SUPPLIER_REF => $langs->trans('LmdbRexelPunchoutProductRefModeSupplierRef'),
 	LmdbRexelPunchoutConfig::PRODUCT_REF_MODE_MANUAL => $langs->trans('LmdbRexelPunchoutProductRefModeManual'),
 );
-$shippingProductOptions = getProductServiceOptions($db);
+$chargeProductOptions = getProductServiceOptions($db);
 
 print '<form method="POST" action="'.$setupUrl.'">';
 print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -243,15 +248,18 @@ print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlSupplierIde
 print '<tr class="oddeven"><td>'.$langs->trans('Language').'</td><td><input class="flat maxwidth100" name="LMDBREXELPUNCHOUT_CXML_LANG" value="'.dol_escape_htmltag(LmdbRexelPunchoutConfig::getString('CXML_LANG', 'en-US')).'"></td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('Mode').'</td><td>'.$form->selectarray('LMDBREXELPUNCHOUT_CXML_MODE', $cxmlModeOptions, LmdbRexelPunchoutConfig::getString('CXML_MODE', 'production'), 0, 0, 0, '', 0, 0, 0, '', 'minwidth150').'</td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlImportShipping').'</td><td>'.(function_exists('ajax_constantonoff') ? ajax_constantonoff('LMDBREXELPUNCHOUT_CXML_IMPORT_SHIPPING', array(), null, 0, 0, 0, 2, 0, 1) : $langs->trans(LmdbRexelPunchoutConfig::getInt('CXML_IMPORT_SHIPPING', 1) ? 'Yes' : 'No')).'</td></tr>';
-print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlShippingProduct').'</td><td>'.$form->selectarray('LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT', $shippingProductOptions, LmdbRexelPunchoutConfig::getInt('CXML_SHIPPING_FK_PRODUCT'), 1, 0, 0, '', 0, 0, 0, '', 'minwidth300').' <span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutCxmlShippingProductHelp').'</span></td></tr>';
+print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlShippingProduct').'</td><td>'.$form->selectarray('LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT', $chargeProductOptions, LmdbRexelPunchoutConfig::getInt('CXML_SHIPPING_FK_PRODUCT'), 1, 0, 0, '', 0, 0, 0, '', 'minwidth300').' <span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutCxmlShippingProductHelp').'</span></td></tr>';
 print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlShippingVatRate').'</td><td><input class="flat width50" name="LMDBREXELPUNCHOUT_CXML_SHIPPING_VAT_RATE" value="'.dol_escape_htmltag(LmdbRexelPunchoutConfig::getString('CXML_SHIPPING_VAT_RATE')).'"> % <span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutCxmlShippingVatRateHelp').'</span></td></tr>';
+print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlImportDeee').'</td><td>'.(function_exists('ajax_constantonoff') ? ajax_constantonoff('LMDBREXELPUNCHOUT_CXML_IMPORT_DEEE', array(), null, 0, 0, 0, 2, 0, 1) : $langs->trans(LmdbRexelPunchoutConfig::getInt('CXML_IMPORT_DEEE', 1) ? 'Yes' : 'No')).'</td></tr>';
+print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlDeeeProduct').'</td><td>'.$form->selectarray('LMDBREXELPUNCHOUT_CXML_DEEE_FK_PRODUCT', $chargeProductOptions, LmdbRexelPunchoutConfig::getInt('CXML_DEEE_FK_PRODUCT'), 1, 0, 0, '', 0, 0, 0, '', 'minwidth300').' <span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutCxmlDeeeProductHelp').'</span></td></tr>';
+print '<tr class="oddeven"><td>'.$langs->trans('LmdbRexelPunchoutCxmlDeeeVatRate').'</td><td><input class="flat width50" name="LMDBREXELPUNCHOUT_CXML_DEEE_VAT_RATE" value="'.dol_escape_htmltag(LmdbRexelPunchoutConfig::getString('CXML_DEEE_VAT_RATE')).'"> % <span class="opacitymedium">'.$langs->trans('LmdbRexelPunchoutCxmlDeeeVatRateHelp').'</span></td></tr>';
 print '</table>';
 
 print '<div class="center"><input type="submit" class="button button-save" value="'.$langs->trans('Save').'"></div>';
 print '</form>';
 
 if (function_exists('ajax_combobox')) {
-	foreach (array('LMDBREXELPUNCHOUT_FK_SOC', 'LMDBREXELPUNCHOUT_OPEN_MODE', 'LMDBREXELPUNCHOUT_PRODUCT_REF_MODE', 'LMDBREXELPUNCHOUT_CXML_MODE', 'LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT') as $htmlname) {
+	foreach (array('LMDBREXELPUNCHOUT_FK_SOC', 'LMDBREXELPUNCHOUT_OPEN_MODE', 'LMDBREXELPUNCHOUT_PRODUCT_REF_MODE', 'LMDBREXELPUNCHOUT_CXML_MODE', 'LMDBREXELPUNCHOUT_CXML_SHIPPING_FK_PRODUCT', 'LMDBREXELPUNCHOUT_CXML_DEEE_FK_PRODUCT') as $htmlname) {
 		ajax_combobox($htmlname);
 	}
 }
