@@ -6,6 +6,7 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once __DIR__.'/lmdbrexelpunchoutconfig.class.php';
+require_once __DIR__.'/lmdbrexelpunchoutbasket.class.php';
 require_once __DIR__.'/lmdbrexelpunchoutparser.class.php';
 require_once __DIR__.'/lmdbrexelpunchoutsecurity.class.php';
 require_once __DIR__.'/lmdbrexelpunchoutsession.class.php';
@@ -50,6 +51,11 @@ class LmdbRexelPunchoutImporter
 			'deee_amount' => 0.0,
 			'deee_currency' => '',
 			'deee_skipped_reason' => '',
+			'unqualified_delta_lines_added' => 0,
+			'unqualified_delta_detected' => false,
+			'unqualified_delta_amount' => 0.0,
+			'unqualified_delta_currency' => '',
+			'unqualified_delta_skipped_reason' => '',
 			'products_created' => 0,
 			'supplier_prices_updated' => 0,
 			'warnings' => array(),
@@ -187,6 +193,7 @@ class LmdbRexelPunchoutImporter
 
 		$this->importCxmlShippingLine($session, $order, $lines, $summary);
 		$this->importCxmlDeeeLine($session, $order, $lines, $summary);
+		$this->importCxmlUnqualifiedDeltaLine($session, $order, $lines, $summary);
 
 		$order->update_price(1, 'auto', 0, $order->thirdparty);
 
@@ -618,6 +625,7 @@ class LmdbRexelPunchoutImporter
 
 	/**
 	 * Add cXML DEEE ecocontribution as a supplier order line when requested.
+	 * Add an optional unqualified positive delta as a supplier order line.
 	 *
 	 * @param LmdbRexelPunchoutSession       $session Session
 	 * @param CommandeFournisseur            $order   Supplier order
@@ -656,6 +664,34 @@ class LmdbRexelPunchoutImporter
 		if (!LmdbRexelPunchoutConfig::getInt('CXML_IMPORT_DEEE', 1)) {
 			$summary['deee_skipped_reason'] = 'disabled';
 			$summary['warnings'][] = $this->trans('LmdbRexelPunchoutDeeeImportDisabled', 'cXML DEEE ecocontribution was not imported because the option is disabled');
+	private function importCxmlUnqualifiedDeltaLine($session, $order, $lines, &$summary)
+	{
+		$basket = $this->decodeBasketPayload($session);
+		$expectedCurrency = LmdbRexelPunchoutConfig::getExpectedCurrency();
+		$delta = LmdbRexelPunchoutBasket::calculateUnqualifiedDelta($basket, $expectedCurrency);
+
+		$summary['unqualified_delta_currency'] = $delta['currency'];
+		$summary['unqualified_delta_amount'] = $delta['amount'];
+
+		if ($delta['currency'] !== $expectedCurrency) {
+			throw new RuntimeException('Unexpected cXML total currency: '.$delta['currency'].' (expected '.$expectedCurrency.')');
+		}
+
+		if ($delta['amount'] < LmdbRexelPunchoutBasket::MIN_UNQUALIFIED_DELTA) {
+			$summary['unqualified_delta_skipped_reason'] = ((float) $delta['total_amount'] > 0 || (float) $delta['lines_amount'] > 0) ? 'zero_amount' : 'not_present';
+			return;
+		}
+
+		$summary['unqualified_delta_detected'] = true;
+
+		if ($this->hasPositiveExplicitCharge($basket, $summary)) {
+			$summary['unqualified_delta_skipped_reason'] = 'explicit_charge_present';
+			return;
+		}
+
+		if (!LmdbRexelPunchoutConfig::getInt('CXML_IMPORT_UNQUALIFIED_DELTA', 0)) {
+			$summary['unqualified_delta_skipped_reason'] = 'disabled';
+			$summary['warnings'][] = $this->trans('LmdbRexelPunchoutUnqualifiedDeltaImportDisabled', 'Unqualified cXML delta was not imported because the option is disabled');
 			return;
 		}
 
@@ -673,6 +709,18 @@ class LmdbRexelPunchoutImporter
 		$summary['deee_lines_added'] = 1;
 		$summary['deee_order_line_id'] = (int) $result;
 		$summary['deee_skipped_reason'] = '';
+			$this->buildUnqualifiedDeltaDescription($delta),
+			(float) $delta['amount'],
+			$this->getUnqualifiedDeltaVatRate($lines),
+			LmdbRexelPunchoutConfig::getInt('CXML_UNQUALIFIED_DELTA_FK_PRODUCT'),
+			'Configured unqualified cXML delta product/service not found: #',
+			'Unable to add unqualified cXML delta supplier order line'
+		);
+
+		$summary['lines_added']++;
+		$summary['unqualified_delta_lines_added'] = 1;
+		$summary['unqualified_delta_order_line_id'] = (int) $result;
+		$summary['unqualified_delta_skipped_reason'] = '';
 	}
 
 	/**
@@ -774,6 +822,17 @@ class LmdbRexelPunchoutImporter
 		}
 
 		return $label;
+	 * Build the supplier order description for an unqualified cXML delta.
+	 *
+	 * @param array{detected:bool,amount:float,currency:string,total_amount:float,lines_amount:float} $delta Delta metadata
+	 * @return string
+	 */
+	private function buildUnqualifiedDeltaDescription($delta)
+	{
+		$label = $this->trans('LmdbRexelPunchoutUnqualifiedDeltaLineLabel', 'Frais divers Rexel non ventilés');
+		$origin = $this->trans('LmdbRexelPunchoutUnqualifiedDeltaLineOrigin', 'Montant calculé depuis l’écart entre le total cXML du panier et les lignes article.');
+
+		return $label."\n".$origin;
 	}
 
 	/**
@@ -794,6 +853,7 @@ class LmdbRexelPunchoutImporter
 
 	/**
 	 * Resolve VAT rate for cXML DEEE ecocontribution.
+	 * Resolve VAT rate for unqualified cXML delta fees.
 	 *
 	 * @param array<int,array<string,mixed>> $lines Normalized item lines
 	 * @return float
@@ -801,11 +861,40 @@ class LmdbRexelPunchoutImporter
 	private function getDeeeVatRate($lines)
 	{
 		$configuredVat = trim(LmdbRexelPunchoutConfig::getString('CXML_DEEE_VAT_RATE'));
+	private function getUnqualifiedDeltaVatRate($lines)
+	{
+		$configuredVat = trim(LmdbRexelPunchoutConfig::getString('CXML_UNQUALIFIED_DELTA_VAT_RATE'));
 		if ($configuredVat !== '') {
 			return LmdbRexelPunchoutParser::toFloat($configuredVat);
 		}
 
 		return $this->getCommonVatRate($lines);
+	}
+
+	/**
+=======
+	 * Check whether a positive explicit charge already exists in the cXML basket or summary.
+	 *
+	 * @param array<string,mixed> $basket  Structured basket metadata
+	 * @param array<string,mixed> $summary Import summary
+	 * @return bool
+	 */
+	private function hasPositiveExplicitCharge($basket, $summary)
+	{
+		if (LmdbRexelPunchoutBasket::hasPositiveExplicitCharge($basket)) {
+			return true;
+		}
+
+		foreach (array('shipping', 'deee') as $prefix) {
+			if ((int) ($summary[$prefix.'_lines_added'] ?? 0) > 0) {
+				return true;
+			}
+			if ((float) ($summary[$prefix.'_amount'] ?? 0) >= LmdbRexelPunchoutBasket::MIN_UNQUALIFIED_DELTA) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

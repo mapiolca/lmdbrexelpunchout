@@ -17,6 +17,7 @@
 - Ajout d'une stratégie configurable de référence produit pour les produits REXEL absents : préfixe configuré, numérotation native Produits/Services, référence REXEL ou choix manuel à l'import.
 - Ajout de l’import de l’écocontribution DEEE cXML comme ligne de commande fournisseur, sur le même modèle que les frais de port.
 - Reprise du pictogramme du module `rexelsync` pour le module Punchout.
+- Ajout d’un import optionnel, désactivé par défaut, de l’écart positif non ventilé entre le total cXML et les lignes article comme frais divers Rexel non ventilés.
 - Mise à jour des traductions, de la documentation et des tests légers pour le périmètre cXML uniquement.
 
 ## 1.0.0 - 2026-07-01

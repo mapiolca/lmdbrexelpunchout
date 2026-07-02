@@ -8,6 +8,7 @@ LmdbRexelPunchoutSessionsPageHelp=Rexel Punchout session tracking and import sta
 LmdbRexelPunchoutAboutPageHelp=Version, compatibility, and maintenance information for the module.
 LmdbRexelPunchoutDependencies=Supplier and Products/Services modules.
 LmdbRexelPunchoutMainFeatures=Punchout button on draft Rexel supplier orders, PunchOutSetupRequest launch, PunchOutOrderMessage return, optional product creation, supplier price update, secure line import, cXML shipping fees, and DEEE ecocontribution.
+LmdbRexelPunchoutMainFeatures=Punchout button on draft Rexel supplier orders, PunchOutSetupRequest launch, PunchOutOrderMessage return, optional product creation, supplier price update, secure line import, cXML shipping fees, and optional unqualified miscellaneous fees.
 LmdbRexelPunchoutLicenseInfo=See the module LICENSE file.
 
 LmdbRexelPunchoutRightUse=Use Rexel Punchout
@@ -63,6 +64,11 @@ LmdbRexelPunchoutCxmlDeeeProduct=DEEE ecocontribution product/service
 LmdbRexelPunchoutCxmlDeeeProductHelp=Optional. If no product/service is selected, positive DEEE is added as a free line.
 LmdbRexelPunchoutCxmlDeeeVatRate=DEEE ecocontribution VAT rate
 LmdbRexelPunchoutCxmlDeeeVatRateHelp=Optional. Leave empty to use the common line VAT rate or the default VAT rate.
+LmdbRexelPunchoutCxmlImportUnqualifiedDelta=Import unqualified cXML delta
+LmdbRexelPunchoutCxmlUnqualifiedDeltaProduct=Unqualified miscellaneous fee product/service
+LmdbRexelPunchoutCxmlUnqualifiedDeltaProductHelp=Optional. Used only when the cXML total is higher than item lines without usable fee details.
+LmdbRexelPunchoutCxmlUnqualifiedDeltaVatRate=Unqualified miscellaneous fee VAT rate
+LmdbRexelPunchoutCxmlUnqualifiedDeltaVatRateHelp=Optional. Leave empty to use the common line VAT rate or the default VAT rate.
 
 LmdbRexelPunchoutUnitMapping=Supplier unit mapping
 LmdbRexelPunchoutUnitCode=Supplier unit
@@ -102,6 +108,9 @@ LmdbRexelPunchoutShippingLineLabel=Rexel shipping fees
 LmdbRexelPunchoutShippingImportDisabled=cXML shipping fees were not imported because the option is disabled.
 LmdbRexelPunchoutDeeeLineLabel=Rexel DEEE ecocontribution
 LmdbRexelPunchoutDeeeImportDisabled=cXML DEEE ecocontribution was not imported because the option is disabled.
+LmdbRexelPunchoutUnqualifiedDeltaLineLabel=Rexel unqualified miscellaneous fees
+LmdbRexelPunchoutUnqualifiedDeltaLineOrigin=Amount calculated from the delta between the cXML basket total and item lines.
+LmdbRexelPunchoutUnqualifiedDeltaImportDisabled=Unqualified cXML delta was not imported because the option is disabled.
 
 LmdbRexelPunchoutSessions=Punchout sessions
 LmdbRexelPunchoutStatusCreated=Created

@@ -31,6 +31,7 @@ Le module ne dépend pas de `rexelsync`. Le tiers Rexel et les identifiants cXML
 - Ajout des lignes via `CommandeFournisseur::addline()`.
 - Import optionnel des frais de port cXML positifs comme ligne de commande fournisseur.
 - Import optionnel de l’écocontribution DEEE cXML positive comme ligne de commande fournisseur.
+- Import optionnel, désactivé par défaut, de l’écart positif non ventilé entre le total cXML et les lignes article comme ligne de frais divers Rexel non ventilés.
 - Mapping générique des unités fournisseur vers les unités Dolibarr.
 - Sessions Punchout temporaires avec jeton aléatoire à usage unique.
 - Cron natif, désactivé par défaut, pour expirer les sessions et purger les anciens payloads.
@@ -70,6 +71,7 @@ Paramètres principaux :
 - Durée de conservation des payloads
 - Import des frais de port cXML, produit/service de frais de port optionnel et TVA dédiée optionnelle
 - Import de l’écocontribution DEEE cXML, produit/service DEEE optionnel et TVA dédiée optionnelle
+- Import désactivé par défaut de l’écart cXML non ventilé, produit/service optionnel et TVA dédiée optionnelle
 - Correspondances d'unités fournisseur vers unités Dolibarr
 
 Les réglages sont enregistrés par entité. Les secrets sont stockés via `dolEncrypt()` lorsque cette fonction native Dolibarr est disponible.
@@ -117,7 +119,12 @@ Les pages publiques vérifient le jeton Punchout et l'entité. La saisie manuell
 - Retour cXML avec lignes `ItemIn` ou `ItemOut` et référence produit alternative lorsque `SupplierPartID` est vide.
 - Parsing `StartPage` depuis `PunchOutSetupResponse`.
 - Retour cXML avec frais de port absent, nul et positif.
+<<<<<<< Updated upstream
 - Retour cXML avec écocontribution DEEE absente, nulle et positive.
+=======
+- Retour cXML avec total supérieur aux lignes article, sans frais explicitement détaillés : option désactivée puis activée.
+- Retour cXML avec frais explicites positifs : pas de ligne d’écart non ventilé en doublon.
+>>>>>>> Stashed changes
 - Parsing des taxes, de `ShipTo` et des métadonnées de lignes.
 - Saisie manuelle sans token CSRF refusée.
 - Saisie manuelle avec token CSRF acceptée.

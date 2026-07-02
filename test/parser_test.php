@@ -66,6 +66,7 @@ if (!function_exists('getDolGlobalInt')) {
 }
 
 require_once __DIR__.'/../class/lmdbrexelpunchoutparser.class.php';
+require_once __DIR__.'/../class/lmdbrexelpunchoutbasket.class.php';
 require_once __DIR__.'/../class/lmdbrexelpunchoutcxmlclient.class.php';
 require_once __DIR__.'/../class/lmdbrexelpunchoutcxmlpayload.class.php';
 
@@ -126,6 +127,26 @@ $cxmlNoDeee = str_replace('<Extrinsic name="ecoContribution">1,23 EUR</Extrinsic
 $noDeeeBasket = $parser->parseCxmlBasket($cxmlNoDeee);
 if (!empty($noDeeeBasket['header']['deee']['has_value']) || abs($noDeeeBasket['header']['deee']['amount']) > 0.000001) {
 	throw new RuntimeException('cXML no DEEE parser test failed');
+$rexelBasket = array(
+	'header' => array(
+		'total' => array('amount' => 270.13, 'currency' => 'EUR', 'has_value' => true),
+		'shipping' => array('amount' => 0.0, 'currency' => 'EUR', 'has_value' => false),
+		'tax' => array('amount' => 0.0, 'currency' => 'EUR', 'has_value' => false),
+		'ship_to' => array(),
+	),
+	'lines' => array(
+		array('qty' => 4, 'unit_price_ht' => 65.80),
+	),
+);
+$rexelDelta = LmdbRexelPunchoutBasket::calculateUnqualifiedDelta($rexelBasket, 'EUR');
+if (!$rexelDelta['detected'] || abs($rexelDelta['amount'] - 6.93) > 0.000001 || $rexelDelta['currency'] !== 'EUR') {
+	throw new RuntimeException('cXML unqualified delta calculation test failed');
+}
+if (LmdbRexelPunchoutBasket::hasPositiveExplicitCharge($rexelBasket)) {
+	throw new RuntimeException('cXML unqualified delta explicit charge detection test failed');
+}
+if (!LmdbRexelPunchoutBasket::hasPositiveExplicitCharge($cxmlBasket)) {
+	throw new RuntimeException('cXML explicit shipping charge detection test failed');
 }
 
 $client = new LmdbRexelPunchoutCxmlClient();

@@ -8,6 +8,7 @@ LmdbRexelPunchoutSessionsPageHelp=Suivi des sessions Punchout Rexel et de leur �
 LmdbRexelPunchoutAboutPageHelp=Informations de version, compatibilité et maintenance du module.
 LmdbRexelPunchoutDependencies=Modules Fournisseurs et Produits/Services.
 LmdbRexelPunchoutMainFeatures=Bouton Punchout sur commande fournisseur Rexel brouillon, lancement PunchOutSetupRequest, retour PunchOutOrderMessage, création produit optionnelle, mise à jour des prix fournisseur, import sécurisé des lignes, frais de port cXML et écocontribution DEEE.
+LmdbRexelPunchoutMainFeatures=Bouton Punchout sur commande fournisseur Rexel brouillon, lancement PunchOutSetupRequest, retour PunchOutOrderMessage, création produit optionnelle, mise à jour des prix fournisseur, import sécurisé des lignes, frais de port cXML et frais divers non ventilés optionnels.
 LmdbRexelPunchoutLicenseInfo=Voir le fichier LICENSE du module.
 
 LmdbRexelPunchoutRightUse=Utiliser le Punchout Rexel
@@ -63,6 +64,11 @@ LmdbRexelPunchoutCxmlDeeeProduct=Produit/service d’écocontribution DEEE
 LmdbRexelPunchoutCxmlDeeeProductHelp=Optionnel. Si aucun produit/service n’est sélectionné, la DEEE positive est ajoutée en ligne libre.
 LmdbRexelPunchoutCxmlDeeeVatRate=Taux de TVA de l’écocontribution DEEE
 LmdbRexelPunchoutCxmlDeeeVatRateHelp=Optionnel. Laisser vide pour utiliser le taux commun des lignes ou la TVA par défaut.
+LmdbRexelPunchoutCxmlImportUnqualifiedDelta=Importer l’écart cXML non ventilé
+LmdbRexelPunchoutCxmlUnqualifiedDeltaProduct=Produit/service de frais divers non ventilés
+LmdbRexelPunchoutCxmlUnqualifiedDeltaProductHelp=Optionnel. Utilisé uniquement lorsque le total cXML est supérieur au total des lignes article sans détail de frais exploitable.
+LmdbRexelPunchoutCxmlUnqualifiedDeltaVatRate=Taux de TVA des frais divers non ventilés
+LmdbRexelPunchoutCxmlUnqualifiedDeltaVatRateHelp=Optionnel. Laisser vide pour utiliser le taux commun des lignes ou la TVA par défaut.
 
 LmdbRexelPunchoutUnitMapping=Correspondance des unités fournisseur
 LmdbRexelPunchoutUnitCode=Unité fournisseur
@@ -102,6 +108,9 @@ LmdbRexelPunchoutShippingLineLabel=Frais de port Rexel
 LmdbRexelPunchoutShippingImportDisabled=Les frais de port cXML n’ont pas été importés car l’option est désactivée.
 LmdbRexelPunchoutDeeeLineLabel=Écocontribution DEEE Rexel
 LmdbRexelPunchoutDeeeImportDisabled=L’écocontribution DEEE cXML n’a pas été importée car l’option est désactivée.
+LmdbRexelPunchoutUnqualifiedDeltaLineLabel=Frais divers Rexel non ventilés
+LmdbRexelPunchoutUnqualifiedDeltaLineOrigin=Montant calculé depuis l’écart entre le total cXML du panier et les lignes article.
+LmdbRexelPunchoutUnqualifiedDeltaImportDisabled=L’écart cXML non ventilé n’a pas été importé car l’option est désactivée.
 
 LmdbRexelPunchoutSessions=Sessions Punchout
 LmdbRexelPunchoutStatusCreated=Créée
